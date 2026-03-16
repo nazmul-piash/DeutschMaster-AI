@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId} (matches auth.uid)
+    // Fields:
+    //   - uid: string (required) - The unique ID of the user
+    //   - completedLessons: list (required) - List of completed lesson IDs
+    //   - examScores: map (optional) - Scores for different exams
+    //   - totalProgress: number (required) - Overall progress percentage
+    //   - level: string (required) - Current proficiency level (A1, A2, etc.)
+    //   - updatedAt: timestamp (optional) - Last update timestamp
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidUserProgress(data) {
+      return hasRequiredFields(['uid', 'completedLessons', 'totalProgress', 'level']) &&
+             hasOnlyAllowedFields(['uid', 'completedLessons', 'totalProgress', 'level', 'examScores', 'updatedAt']) &&
+             data.uid is string &&
+             data.uid == request.auth.uid &&
+             data.completedLessons is list &&
+             data.totalProgress is number &&
+             data.totalProgress >= 0 && data.totalProgress <= 100 &&
+             data.level in ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProgress(request.resource.data);
+      allow update: if isOwner(userId) && isValidUserProgress(request.resource.data);
+      allow delete: if isOwner(userId);
+    }
+
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

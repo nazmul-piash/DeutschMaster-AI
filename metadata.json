@@ -1,0 +1,7 @@
+{
+  "name": "DeutschMaster AI",
+  "description": "An interactive German A1/A2 language learning platform featuring AI-driven lessons, mock exams, and real-time speaking practice.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

@@ -1,0 +1,37 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@300;500;700&display=swap');
+
+@theme {
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-neon: #00FF66;
+  --color-dark: #0A0A0B;
+  --color-surface: #141417;
+  --color-border: #26262B;
+}
+
+@layer base {
+  body {
+    @apply bg-dark text-slate-300 antialiased text-[13px] selection:bg-neon selection:text-dark;
+    font-feature-settings: "ss01", "ss02", "cv01";
+  }
+
+  h1, h2, h3, h4 {
+    @apply text-white font-bold tracking-tight;
+  }
+}
+
+@layer components {
+  .tech-card {
+    @apply bg-surface border border-border rounded-none p-4 transition-all hover:border-neon/50;
+  }
+  
+  .btn-tech {
+    @apply px-4 py-2 bg-neon text-dark font-bold uppercase tracking-tighter text-xs hover:bg-white transition-all active:scale-95;
+  }
+
+  .btn-outline {
+    @apply px-4 py-2 border border-border text-white font-bold uppercase tracking-tighter text-xs hover:border-neon hover:text-neon transition-all;
+  }
+}
