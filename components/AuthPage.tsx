@@ -13,10 +13,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [success, setSuccess] = useState<string | null>(null);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(null);
 
     try {
       const redirectTo = 'https://deutschmasterpro.netlify.app/';
@@ -30,7 +33,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
           options: { emailRedirectTo: redirectTo }
         });
         if (error) throw error;
-        setError("Check your email for the confirmation link!");
+        setSuccess("Check your email for the confirmation link! You must confirm your email before you can sign in.");
       }
     } catch (err: any) {
       setError(err.message);
@@ -43,6 +46,37 @@ const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleAppleAuth = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleMicrosoftAuth = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'azure',
+        options: {
+          redirectTo: window.location.origin
+        }
       });
       if (error) throw error;
     } catch (err: any) {
@@ -100,6 +134,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
               </div>
             )}
 
+            {success && (
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs rounded-xl text-center">
+                {success}
+              </div>
+            )}
+
             <button 
               type="submit" 
               disabled={loading}
@@ -117,13 +157,29 @@ const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
               <span className="relative px-4 bg-[var(--card-bg)] text-[10px] text-slate-400 uppercase tracking-widest font-medium">Or continue with</span>
             </div>
 
-            <button 
-              onClick={handleGoogleAuth}
-              className="w-full py-3 px-4 border border-border dark:border-slate-800 rounded-full flex items-center justify-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all font-medium text-slate-600 dark:text-slate-400"
-            >
-              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
-              Google Account
-            </button>
+            <div className="grid grid-cols-3 gap-3">
+              <button 
+                onClick={handleGoogleAuth}
+                className="py-3 px-4 border border-border dark:border-slate-800 rounded-xl flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                title="Google"
+              >
+                <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={handleAppleAuth}
+                className="py-3 px-4 border border-border dark:border-slate-800 rounded-xl flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                title="Apple"
+              >
+                <img src="https://www.apple.com/favicon.ico" alt="Apple" className="w-5 h-5 dark:invert" />
+              </button>
+              <button 
+                onClick={handleMicrosoftAuth}
+                className="py-3 px-4 border border-border dark:border-slate-800 rounded-xl flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                title="Microsoft"
+              >
+                <img src="https://www.microsoft.com/favicon.ico" alt="Microsoft" className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           <p className="mt-8 text-center text-sm text-slate-500">

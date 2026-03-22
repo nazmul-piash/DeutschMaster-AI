@@ -1,10 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL;
-const supabaseAnonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY;
+// Robust environment variable detection
+const getEnv = (key: string) => {
+  return (import.meta as any).env[key] || (process as any).env[key] || '';
+};
+
+const supabaseUrl = getEnv('VITE_SUPABASE_URL') || getEnv('SUPABASE_URL');
+const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY') || getEnv('SUPABASE_ANON_KEY');
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Supabase credentials are missing. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment variables.');
+  console.error('CRITICAL: Supabase credentials missing. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Netlify settings.');
 }
 
-export const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseAnonKey || 'placeholder');
+// Use a fallback URL to prevent the entire app from crashing on initialization
+// This allows us to show a friendly error message in the UI instead of a white screen
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder-please-set-your-url.supabase.co', 
+  supabaseAnonKey || 'placeholder-please-set-your-key'
+);

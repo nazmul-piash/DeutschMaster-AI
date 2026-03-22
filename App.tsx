@@ -29,6 +29,11 @@ const App: React.FC = () => {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
+  // Check for missing Supabase credentials
+  const isSupabaseConfigured = 
+    supabase.auth.getSession !== undefined && 
+    !(supabase as any).supabaseUrl?.includes('placeholder');
+
   // Theme effect
   useEffect(() => {
     if (isDarkMode) {
@@ -74,7 +79,11 @@ const App: React.FC = () => {
           level: ProficiencyLevel.A1,
           updated_at: new Date().toISOString()
         };
-        await supabase.from('profiles').insert([initialProgress]);
+        const { error: insertError } = await supabase.from('profiles').insert([initialProgress]);
+        if (insertError) {
+          console.error('Error creating profile:', insertError);
+          return;
+        }
         setUserProgress({
           completedLessons: [],
           examScores: {},
