@@ -45,65 +45,57 @@ const Assistant: React.FC<AssistantProps> = ({ message, isTalking = false, mood 
   }, [message]);
 
   const Eye = () => (
-    <div className="relative w-8 h-8 bg-white rounded-full flex items-center justify-center border-[2px] border-slate-900 shadow-inner overflow-hidden">
+    <div className="relative w-6 h-6 bg-white rounded-full flex items-center justify-center border-2 border-brand/20 shadow-inner overflow-hidden">
       <div 
-        className="w-3.5 h-3.5 bg-slate-900 rounded-full flex items-center justify-center transition-transform duration-75"
+        className="w-2.5 h-2.5 bg-brand rounded-full flex items-center justify-center transition-transform duration-75"
         style={{ transform: `translate(${mousePos.x}px, ${mousePos.y}px)` }}
       >
         <div className="w-1 h-1 bg-white rounded-full translate-x-0.5 translate-y-[-0.5px]"></div>
       </div>
-      <div className="absolute inset-0 bg-indigo-500 origin-top scale-y-0 animate-blink"></div>
+      <div className="absolute inset-0 bg-brand/10 origin-top scale-y-0 animate-blink"></div>
     </div>
   );
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center gap-6 p-4 perspective-1000">
-      <div className="relative group">
-        <div className="absolute -inset-1 bg-indigo-400 rounded-2xl blur opacity-10 group-hover:opacity-30 transition duration-1000"></div>
-        <div className="relative bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-indigo-100/50 max-w-[200px] transform hover:rotate-1 transition-all">
-          <p className="text-sm font-marker text-indigo-900 leading-tight">
+    <div ref={containerRef} className="flex flex-col items-center gap-4 p-4">
+      <div className="relative">
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-border max-w-[200px] relative">
+          <p className="text-sm text-ink leading-tight font-medium">
             {displayText}
           </p>
-          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white/95 border-b border-r border-indigo-100/50 rotate-45"></div>
+          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-b border-r border-border rotate-45"></div>
         </div>
       </div>
 
-      <div className="relative w-28 h-28 preserve-3d animate-float">
-        {/* Glow Orbs */}
-        <div className="absolute -left-12 top-1/2 w-2 h-2 bg-amber-400 rounded-full blur-[1px] animate-pulse"></div>
-        <div className="absolute -right-12 top-1/2 w-2 h-2 bg-emerald-400 rounded-full blur-[1px] animate-pulse delay-500"></div>
-
-        <div className={`w-full h-full preserve-3d flex items-center justify-center transition-transform duration-500 ${mood === 'thinking' ? 'rotate-y-12' : ''}`}>
-           <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600 via-indigo-500 to-indigo-400 clip-octahedron shadow-2xl">
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                 <div className="flex gap-2">
-                    <Eye />
-                    <Eye />
-                 </div>
-                 <div className={`
-                    w-4 h-1 bg-slate-900 rounded-full transition-all duration-200
-                    ${isTalking ? 'h-3 w-3 rounded-full' : ''}
-                    ${mood === 'happy' ? 'w-6 h-2 rounded-b-full rounded-t-none' : ''}
-                 `}></div>
-              </div>
-              <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-white/10"></div>
-           </div>
+      <div className="relative w-24 h-24 animate-float">
+        <div className="absolute inset-0 bg-brand rounded-full shadow-lg flex flex-col items-center justify-center gap-2">
+          <div className="flex gap-3">
+            <Eye />
+            <Eye />
+          </div>
+          <div className={`
+            w-6 h-1 bg-white/40 rounded-full transition-all duration-200
+            ${isTalking ? 'h-4 w-4 rounded-full' : ''}
+            ${mood === 'happy' ? 'h-3 w-8 rounded-b-full rounded-t-none bg-white' : ''}
+            ${mood === 'excited' ? 'h-4 w-10 rounded-b-full rounded-t-none bg-white' : ''}
+          `}></div>
         </div>
+        
+        {/* Rosy cheeks */}
+        <div className="absolute left-2 top-1/2 w-4 h-2 bg-white/20 rounded-full blur-[2px]"></div>
+        <div className="absolute right-2 top-1/2 w-4 h-2 bg-white/20 rounded-full blur-[2px]"></div>
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
-        .perspective-1000 { perspective: 1000px; }
-        .preserve-3d { transform-style: preserve-3d; }
-        .clip-octahedron { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
         @keyframes float {
-          0%, 100% { transform: translateY(0) rotateZ(-2deg); }
-          50% { transform: translateY(-12px) rotateZ(2deg); }
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
         }
         @keyframes blink {
           0%, 94%, 100% { transform: scaleY(0); }
           97% { transform: scaleY(1); }
         }
-        .animate-float { animation: float 5s ease-in-out infinite; }
+        .animate-float { animation: float 4s ease-in-out infinite; }
         .animate-blink { animation: blink 4s linear infinite; }
       `}} />
     </div>

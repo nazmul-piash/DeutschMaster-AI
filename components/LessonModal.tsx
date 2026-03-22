@@ -29,7 +29,7 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
         const quizData = await geminiService.generateQuiz(lesson.level, lesson.topic);
         setContent(text || '');
         setQuiz(quizData);
-        setAssistantMessage(`This is an academic deep-dive into ${lesson.topic}. Let's master it!`);
+        setAssistantMessage(`Let's explore ${lesson.topic} together! It's going to be fun!`);
         setAssistantMood('happy');
       } catch (err) {
         console.error(err);
@@ -43,8 +43,7 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
   const handleSpeak = async () => {
     if (isSpeaking) return;
     setIsSpeaking(true);
-    setAssistantMessage("Listening is key to passing the exam! 🎧");
-    // We send a cleaned version of the text to TTS
+    setAssistantMessage("Listen closely to the pronunciation! 🎧");
     const cleanText = content.replace(/[#*]/g, '');
     await geminiService.speakText(cleanText);
     setIsSpeaking(false);
@@ -58,35 +57,37 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
     setQuizScore(score);
     setStep('result');
     if (score === quiz.length) {
-      setAssistantMessage("Excellent! You've met the academic requirements for this module! ⭐");
+      setAssistantMessage("Incredible! You're a natural at this! ⭐");
       setAssistantMood('excited');
     } else {
-      setAssistantMessage("Good effort. Let's review the mistakes for academic precision. ✍️");
+      setAssistantMessage("Great job! Every mistake is a chance to learn something new. ✍️");
       setAssistantMood('happy');
     }
   };
 
   const Notepad = ({ text }: { text: string }) => {
     return (
-      <div className="relative tech-card p-8 md:p-12 overflow-hidden">
+      <div className="relative card p-8 md:p-12 overflow-hidden bg-white shadow-xl shadow-slate-200/50 border-brand/10">
+        <div className="absolute top-0 left-0 w-full h-2 bg-brand/10"></div>
+        
         <button 
           onClick={handleSpeak}
           disabled={isSpeaking}
-          className="absolute top-4 right-4 btn-outline py-1 px-4 text-[9px] z-20 flex items-center gap-2"
+          className="absolute top-6 right-6 btn-secondary py-2 px-4 text-xs z-20 flex items-center gap-2"
         >
-          {isSpeaking ? '🔊 REPRODUCING...' : '🔊 REPRODUCE_AUDIO'}
+          {isSpeaking ? '🔊 Playing...' : '🔊 Listen'}
         </button>
 
-        <div className="relative z-10 font-mono text-[11px] leading-relaxed text-slate-300 uppercase">
+        <div className="relative z-10 font-serif text-lg leading-relaxed text-slate-700">
            {text.split('\n').map((line, lineIdx) => (
-             <p key={lineIdx} className="mb-4">
+             <p key={lineIdx} className="mb-6">
                 {line.split(' ').map((word, wordIdx) => {
                   const isNoun = /^[A-Z]/.test(word) && word.length > 3;
                   if (isNoun) {
                     return (
                       <span key={wordIdx} className="inline-block relative px-1 mx-0.5 group">
-                        <span className="relative z-10 text-neon font-bold">{word} </span>
-                        <div className="absolute -bottom-0.5 left-0 w-full h-px bg-neon/30"></div>
+                        <span className="relative z-10 text-brand font-bold">{word} </span>
+                        <div className="absolute -bottom-0.5 left-0 w-full h-1 bg-brand/10 rounded-full"></div>
                       </span>
                     );
                   }
@@ -95,43 +96,46 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
              </p>
            ))}
         </div>
-        <div className="absolute bottom-4 left-4 opacity-20 text-neon font-mono text-[8px] uppercase tracking-[0.3em]">Protocol_CEFR_{lesson.level}_Verified</div>
+        <div className="absolute bottom-6 left-8 opacity-40 text-brand font-medium text-[10px] uppercase tracking-widest italic">Level {lesson.level} • {lesson.topic}</div>
       </div>
     );
   };
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark/90 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-paper/90 backdrop-blur-md">
         <div className="text-center">
-           <div className="w-16 h-16 mb-8 mx-auto grayscale opacity-50"><Assistant message="..." mood="thinking" /></div>
-           <h3 className="text-[10px] font-mono text-neon uppercase tracking-[0.4em] animate-pulse">Synchronizing_Academic_Data...</h3>
+           <div className="w-24 h-24 mb-8 mx-auto"><Assistant message="..." mood="thinking" /></div>
+           <h3 className="text-sm font-medium text-brand uppercase tracking-[0.4em] animate-pulse">Preparing your lesson...</h3>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark/80 backdrop-blur-sm p-4 md:p-12 overflow-y-auto">
-      <div className="bg-dark border border-border w-full max-w-7xl max-h-full overflow-hidden relative flex flex-col md:flex-row">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 md:p-8 overflow-y-auto">
+      <div className="bg-paper rounded-[40px] shadow-2xl w-full max-w-7xl max-h-full overflow-hidden relative flex flex-col md:flex-row border border-white/50">
         
-        <div className="hidden md:flex w-64 bg-surface border-r border-border items-center justify-center p-6 shrink-0">
-           <div className="grayscale opacity-70">
-            <Assistant message={assistantMessage} mood={assistantMood} />
-           </div>
+        <div className="hidden md:flex w-72 bg-brand/5 border-r border-brand/10 items-center justify-center p-8 shrink-0">
+          <Assistant message={assistantMessage} mood={assistantMood} />
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 md:p-12 relative">
-          <button onClick={onClose} className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center border border-border text-slate-500 hover:text-white hover:border-neon transition-all z-50 text-xs font-mono">✕</button>
+        <div className="flex-1 overflow-y-auto p-8 md:p-12 relative">
+          <button 
+            onClick={onClose} 
+            className="absolute top-8 right-8 w-10 h-10 flex items-center justify-center rounded-full bg-white border border-slate-100 text-slate-400 hover:text-brand hover:border-brand transition-all z-50"
+          >
+            ✕
+          </button>
 
           <div className="max-w-4xl mx-auto">
-            <header className="mb-10">
-              <div className="flex items-center gap-4 mb-4">
-                 <div className="px-3 py-1 bg-neon/10 border border-neon/20 text-neon text-[9px] font-mono uppercase tracking-widest">LVL_{lesson.level}</div>
-                 <h2 className="text-sm font-bold text-white uppercase tracking-widest font-mono">{lesson.title}</h2>
+            <header className="mb-12">
+              <div className="flex items-center gap-4 mb-6">
+                 <div className="px-3 py-1 bg-brand/10 text-brand text-[10px] font-bold rounded-full uppercase tracking-widest">Level {lesson.level}</div>
+                 <h2 className="text-2xl font-bold text-slate-800">{lesson.title}</h2>
               </div>
-              <div className="h-1 w-full bg-border overflow-hidden flex">
-                 <div className={`h-full transition-all duration-700 ${step === 'reading' ? 'w-1/3 bg-neon' : step === 'quiz' ? 'w-2/3 bg-neon' : 'w-full bg-neon'}`}></div>
+              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                 <div className={`h-full transition-all duration-700 rounded-full ${step === 'reading' ? 'w-1/3 bg-brand' : step === 'quiz' ? 'w-2/3 bg-brand' : 'w-full bg-brand'}`}></div>
               </div>
             </header>
 
@@ -141,32 +145,32 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
                 <button 
                   onClick={() => {
                     setStep('quiz');
-                    setAssistantMessage("Ready for the academic checkup? Viel Erfolg! 📝");
+                    setAssistantMessage("Ready for a quick checkup? You've got this! 📝");
                   }}
-                  className="mt-8 btn-tech w-full py-4 text-xs tracking-[0.2em]"
+                  className="mt-10 btn-primary w-full py-5 text-lg shadow-xl shadow-brand/20"
                 >
-                  INITIALIZE_PROFICIENCY_TEST
+                  Start Quiz
                 </button>
               </div>
             )}
 
             {step === 'quiz' && (
-              <div className="space-y-6 animate-in fade-in duration-500">
+              <div className="space-y-8 animate-in fade-in duration-500">
                 {quiz.map((q, idx) => (
-                  <div key={idx} className="tech-card p-6 border-border/50">
-                    <p className="text-[11px] font-bold text-white mb-6 flex gap-4 font-mono uppercase">
-                       <span className="text-neon/30 italic">#{idx + 1}</span>
+                  <div key={idx} className="card p-8 border-slate-100">
+                    <p className="text-lg font-bold text-slate-800 mb-8 flex gap-4">
+                       <span className="text-brand/30 italic">#{idx + 1}</span>
                        {q.question}
                     </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {q.options.map((opt) => (
                         <button
                           key={opt}
                           onClick={() => setAnswers({...answers, [idx]: opt})}
-                          className={`p-3 border text-left text-[10px] font-mono transition-all uppercase tracking-widest ${
+                          className={`p-4 rounded-2xl border text-left text-sm font-medium transition-all ${
                             answers[idx] === opt 
-                              ? 'bg-neon/10 border-neon text-neon' 
-                              : 'bg-surface/50 border-border text-slate-500 hover:border-neon/50'
+                              ? 'bg-brand/10 border-brand text-brand shadow-md shadow-brand/10' 
+                              : 'bg-white border-slate-100 text-slate-500 hover:border-brand/50'
                           }`}
                         >
                           {opt}
@@ -178,25 +182,25 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
                 <button 
                   onClick={handleQuizSubmit}
                   disabled={Object.keys(answers).length < quiz.length}
-                  className="btn-tech w-full py-4 text-xs tracking-[0.2em]"
+                  className="btn-primary w-full py-5 text-lg shadow-xl shadow-brand/20"
                 >
-                  VERIFY_RESULTS
+                  Check My Answers
                 </button>
               </div>
             )}
 
             {step === 'result' && (
-              <div className="text-center py-12 animate-in zoom-in duration-500">
-                <div className="text-6xl mb-8 grayscale opacity-50">{quizScore >= 4 ? '🏅' : '🧗'}</div>
-                <h3 className="text-xl font-bold text-white mb-4 uppercase tracking-[0.3em] font-mono">{quizScore === quiz.length ? 'PERFEKT!' : 'GUT_GEMACHT!'}</h3>
-                <p className="text-xs text-slate-500 mb-12 font-mono uppercase">SCORE_DETECTED: <span className="text-neon font-black">{quizScore} / {quiz.length}</span> IN {lesson.topic}</p>
-                <div className="tech-card p-8 max-w-2xl mx-auto mb-12 border-neon/20">
-                   <p className="text-neon text-[10px] font-bold mb-4 uppercase tracking-[0.2em] font-mono">PROGRESS_LOG:</p>
-                   <p className="text-[10px] text-slate-400 leading-relaxed font-mono uppercase">
-                     This module is now part of your academic portfolio. Every step gets you closer to Goethe A2 certification!
+              <div className="text-center py-16 animate-in zoom-in duration-500">
+                <div className="text-7xl mb-10">{quizScore >= 4 ? '🏅' : '🎉'}</div>
+                <h3 className="text-4xl font-bold text-slate-800 mb-4">{quizScore === quiz.length ? 'Perfect Score!' : 'Well Done!'}</h3>
+                <p className="text-lg text-slate-500 mb-12">You scored <span className="text-brand font-bold text-2xl">{quizScore} / {quiz.length}</span> in {lesson.topic}</p>
+                <div className="card p-8 max-w-2xl mx-auto mb-12 bg-brand/5 border-brand/10">
+                   <p className="text-brand font-bold mb-4 uppercase text-xs tracking-widest">Learning Progress:</p>
+                   <p className="text-slate-600 leading-relaxed italic">
+                     "This lesson is now part of your journey. Every small step brings you closer to your goal of speaking German fluently!"
                    </p>
                 </div>
-                <button onClick={onComplete} className="btn-tech w-full max-w-md py-4 text-xs tracking-[0.2em]">RETURN_TO_DASHBOARD</button>
+                <button onClick={onComplete} className="btn-primary w-full max-w-md py-5 text-lg shadow-xl shadow-brand/20">Continue Your Journey</button>
               </div>
             )}
           </div>

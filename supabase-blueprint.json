@@ -1,0 +1,19 @@
+{
+  "tables": {
+    "profiles": {
+      "id": "uuid PRIMARY KEY REFERENCES auth.users",
+      "completed_lessons": "text[] DEFAULT '{}'",
+      "exam_scores": "jsonb DEFAULT '{}'",
+      "total_progress": "integer DEFAULT 0",
+      "level": "text DEFAULT 'A1'",
+      "updated_at": "timestamp with time zone DEFAULT now()"
+    }
+  },
+  "policies": {
+    "profiles": {
+      "select": "auth.uid() = id",
+      "insert": "auth.uid() = id",
+      "update": "auth.uid() = id"
+    }
+  }
+}

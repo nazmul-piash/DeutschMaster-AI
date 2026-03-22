@@ -28,16 +28,16 @@ export const geminiService = {
   async generateLessonContent(level: ProficiencyLevel, topic: string) {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `You are a certified Goethe-Institut examiner. Generate an academically rigorous ${level} lesson about: ${topic}.
-      Follow CEFR (Common European Framework of Reference for Languages) standards.
+      contents: `You are a friendly and encouraging German tutor. Generate a joyful and easy-to-understand ${level} lesson about: ${topic}.
+      Make it feel like a fun adventure!
       
       Structure:
-      1. Learning Objectives (Academic).
-      2. Essential Vocabulary (15 words + articles for nouns).
-      3. Grammar Lab: Detailed explanation of rules with examples.
-      4. Goethe Exam Context: How this topic appears in official exams.
-      5. Useful Phrases: 5 formal and 5 informal sentences.
-      6. Kurzfassung (Summary in German).`,
+      1. What we'll learn today! (Exciting goals).
+      2. Fun Words to Know (15 words + articles for nouns).
+      3. Grammar Corner: Simple and clear explanation of rules with friendly examples.
+      4. Real-life Magic: How to use this when talking to friends in Germany.
+      5. Daily Phrases: 5 formal and 5 informal sentences.
+      6. Zusammenfassung (A friendly summary in German).`,
     });
     return response.text;
   },
@@ -45,12 +45,12 @@ export const geminiService = {
   async speakText(text: string) {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text: `Speak this German text clearly and professionally: ${text}` }] }],
+      contents: [{ parts: [{ text: `Speak this German text in a warm, friendly, and clear voice: ${text}` }] }],
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Kore' }, // Professional German-sounding voice
+            prebuiltVoiceConfig: { voiceName: 'Zephyr' }, // Friendly and clear voice
           },
         },
       },
@@ -70,7 +70,7 @@ export const geminiService = {
   async generateQuiz(level: ProficiencyLevel, topic: string): Promise<QuizQuestion[]> {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Generate a 5-question multiple choice quiz for ${level} based on official German exam patterns (Goethe/Telc). Topic: ${topic}.`,
+      contents: `Generate a fun and encouraging 5-question multiple choice quiz for ${level} learners. Topic: ${topic}. Make the questions feel like a game!`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -91,13 +91,49 @@ export const geminiService = {
     return JSON.parse(response.text || "[]");
   },
 
+  async generateExamContent(level: ProficiencyLevel, module: string) {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Generate a professional ${level} German exam for the ${module} module.
+      If module is 'Reading', provide a text and 5 questions.
+      If module is 'Listening', provide a text that will be read aloud and 5 questions.
+      If module is 'Writing', provide a prompt.
+      If module is 'Speaking', provide 3 discussion points.
+      Return the result in JSON format.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            text: { type: Type.STRING, description: "The text to read or listen to" },
+            questions: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  question: { type: Type.STRING },
+                  options: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  correctAnswer: { type: Type.STRING }
+                },
+                required: ["question", "options", "correctAnswer"]
+              }
+            },
+            writingPrompt: { type: Type.STRING },
+            speakingPoints: { type: Type.ARRAY, items: { type: Type.STRING } }
+          }
+        }
+      }
+    });
+    return JSON.parse(response.text || "{}");
+  },
+
   async evaluateWriting(level: ProficiencyLevel, prompt: string, userText: string) {
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
-      contents: `Evaluate this ${level} writing task as a Goethe-Institut examiner.
+      contents: `Evaluate this ${level} writing task as a supportive and kind German tutor.
       Prompt: ${prompt}
       Student response: ${userText}
-      Score based on: Vocabulary, Grammar Accuracy, and Task Completion.`,
+      Focus on encouraging the student while gently pointing out where they can improve.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {

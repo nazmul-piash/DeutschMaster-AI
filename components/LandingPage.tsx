@@ -7,23 +7,23 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-dark font-sans">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[var(--bg-app)] font-sans transition-colors duration-300">
       {/* Background Decorative Elements */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
+      <div className="absolute inset-0 z-0 overflow-hidden opacity-20">
+        <div className="absolute top-10 left-10 text-[180px] font-serif italic select-none text-brand/10">Hallo</div>
+        <div className="absolute bottom-10 right-10 text-[180px] font-serif italic select-none text-brand/10">Deutsch</div>
+        
+        {/* Soft floating circles */}
         <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 0.05, scale: 1 }}
-          transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
-          className="absolute -top-20 -left-20 w-96 h-96 bg-neon rounded-full blur-[120px]"
+          animate={{ y: [0, -20, 0], x: [0, 10, 0] }}
+          transition={{ duration: 8, repeat: Infinity }}
+          className="absolute top-1/4 left-1/4 w-64 h-64 bg-brand/5 rounded-full blur-3xl"
         />
         <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 0.05, scale: 1 }}
-          transition={{ duration: 2.5, repeat: Infinity, repeatType: "reverse", delay: 0.5 }}
-          className="absolute -bottom-20 -right-20 w-96 h-96 bg-neon rounded-full blur-[120px]"
+          animate={{ y: [0, 20, 0], x: [0, -10, 0] }}
+          transition={{ duration: 10, repeat: Infinity }}
+          className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-brand/5 rounded-full blur-3xl"
         />
-        <div className="absolute top-1/4 right-1/4 text-[120px] opacity-5 select-none font-mono font-bold uppercase tracking-tighter">DEUTSCH</div>
-        <div className="absolute bottom-1/4 left-1/4 text-[120px] opacity-5 select-none font-mono font-bold uppercase tracking-tighter">SYSTEM</div>
       </div>
 
       <div className="relative z-10 text-center px-6 max-w-4xl">
@@ -32,15 +32,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8 }}
         >
-          <div className="inline-block px-3 py-1 bg-neon/10 border border-neon/20 text-neon text-[9px] font-mono uppercase tracking-[0.3em] mb-6">
-            Language_Acquisition_Protocol_v2.5
+          <div className="inline-block px-4 py-1 bg-brand/10 text-brand text-xs font-medium rounded-full mb-8 uppercase tracking-widest">
+            Your Journey to German Fluency
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight uppercase tracking-tighter">
-            Master German with <span className="text-neon">Precision</span>
+          <h1 className="text-5xl md:text-7xl mb-8 leading-tight text-[var(--text-main)]">
+            Learn German with <span className="italic font-serif text-brand">Joy</span> and <span className="italic font-serif text-brand">Confidence</span>
           </h1>
-          <p className="text-xs md:text-sm text-slate-500 mb-12 max-w-xl mx-auto leading-relaxed font-mono uppercase">
-            High-frequency neural training for A1/A2 proficiency. 
-            AI-powered syntax analysis and real-time phonetic calibration.
+          <p className="text-lg md:text-xl text-slate-600 mb-12 max-w-2xl mx-auto leading-relaxed">
+            Discover a friendly and effective way to master the German language. 
+            From your first "Hallo" to full conversations, we're here to guide you every step of the way.
           </p>
         </motion.div>
 
@@ -51,21 +51,24 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
         >
           <button
             onClick={onStart}
-            className="btn-tech px-12 py-4 text-xs tracking-[0.2em]"
+            className="btn-primary px-12 py-5 text-lg shadow-xl shadow-brand/20"
           >
-            INITIALIZE_SYSTEM_CORE
+            Start Your Adventure
           </button>
         </motion.div>
 
-        <div className="mt-20 grid grid-cols-3 gap-8 opacity-40">
-          <div className="flex flex-col items-center">
-            <span className="text-[10px] font-bold text-white uppercase tracking-widest font-mono">Neural_Lessons</span>
+        <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-12 text-slate-400">
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-2xl">📚</span>
+            <span className="text-xs font-medium uppercase tracking-widest">Interactive Lessons</span>
           </div>
-          <div className="flex flex-col items-center">
-            <span className="text-[10px] font-bold text-white uppercase tracking-widest font-mono">Voice_Sync</span>
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-2xl">🗣️</span>
+            <span className="text-xs font-medium uppercase tracking-widest">Speaking Practice</span>
           </div>
-          <div className="flex flex-col items-center">
-            <span className="text-[10px] font-bold text-white uppercase tracking-widest font-mono">Simulation_Exams</span>
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-2xl">🎯</span>
+            <span className="text-xs font-medium uppercase tracking-widest">Exam Preparation</span>
           </div>
         </div>
       </div>
