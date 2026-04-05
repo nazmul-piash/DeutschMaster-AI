@@ -13,7 +13,7 @@
     "@google/genai": "^1.38.0",
     "@supabase/supabase-js": "^2.99.3",
     "@tailwindcss/vite": "^4.2.1",
-    "firebase": "^12.10.0",
+    "lucide-react": "^0.475.0",
     "motion": "^12.36.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
