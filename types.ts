@@ -18,6 +18,7 @@ export interface Lesson {
 
 export interface QuizQuestion {
   question: string;
+  questionEn?: string;
   options: string[];
   correctAnswer: string;
   explanation: string;

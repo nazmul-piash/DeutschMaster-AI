@@ -80,10 +80,20 @@ export const geminiService = {
     }
   },
 
-  async generateQuiz(level: ProficiencyLevel, topic: string): Promise<QuizQuestion[]> {
+  async generateQuiz(level: ProficiencyLevel, topic: string, difficulty: 'Easy' | 'Medium' | 'Hard' = 'Medium'): Promise<QuizQuestion[]> {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Generate a fun and encouraging 5-question multiple choice quiz for ${level} learners. Topic: ${topic}. Make the questions feel like a game!`,
+      contents: `Generate a 5-question multiple choice quiz in GERMAN for ${level} learners on the topic: ${topic}. 
+      Difficulty level: ${difficulty}.
+      
+      Requirements:
+      - The question (question) MUST be in German.
+      - The questionEn field MUST be the English translation of the question.
+      - All options MUST be in German.
+      - The explanation MUST be in English.
+      - Follow the standard of official German exams like Goethe-Zertifikat.
+      
+      Questions should progress slightly in difficulty within the set.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -92,11 +102,12 @@ export const geminiService = {
             type: Type.OBJECT,
             properties: {
               question: { type: Type.STRING },
+              questionEn: { type: Type.STRING },
               options: { type: Type.ARRAY, items: { type: Type.STRING } },
               correctAnswer: { type: Type.STRING },
               explanation: { type: Type.STRING }
             },
-            required: ["question", "options", "correctAnswer", "explanation"]
+            required: ["question", "questionEn", "options", "correctAnswer", "explanation"]
           }
         }
       }

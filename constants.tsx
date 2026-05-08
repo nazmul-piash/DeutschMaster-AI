@@ -11,13 +11,14 @@ export const INITIAL_LESSONS: Lesson[] = [
   { id: 'a1-5', title: 'Essen & Trinken', level: ProficiencyLevel.A1, topic: 'Food and Dining', description: 'Ordering your favorite treats at a cozy German café.', status: 'locked', progress: 0 },
   
   // A2 ELEMENTARY
-  { id: 'a2-1', title: 'Das Perfekt', level: ProficiencyLevel.A2, topic: 'Conversational Past', description: 'Sharing stories about your wonderful experiences.', status: 'locked', progress: 0 },
-  { id: 'a2-2', title: 'Dativ-Ergänzung', level: ProficiencyLevel.A2, topic: 'The Dative Case', description: 'Adding more detail and color to your conversations.', status: 'locked', progress: 0 },
-  { id: 'a2-3', title: 'Adjektivdeklination', level: ProficiencyLevel.A2, topic: 'Adjective Endings', description: 'Describing the world around you with beautiful adjectives.', status: 'locked', progress: 0 },
-  { id: 'a2-4', title: 'Nebensätze (weil, dass)', level: ProficiencyLevel.A2, topic: 'Subordinate Clauses', description: 'Expressing your thoughts and reasons more clearly.', status: 'locked', progress: 0 },
-  { id: 'a2-5', title: 'Briefe & E-Mails', level: ProficiencyLevel.A2, topic: 'Writing Skills', description: 'Writing heartfelt messages to friends and colleagues.', status: 'locked', progress: 0 },
-  { id: 'a2-6', title: 'Körper & Gesundheit', level: ProficiencyLevel.A2, topic: 'Health & Wellness', description: 'Taking care of yourself and talking about well-being.', status: 'locked', progress: 0 },
-  { id: 'a2-7', title: 'Arbeitswelt', level: ProficiencyLevel.A2, topic: 'Dream Jobs', description: 'Exploring career paths and professional dreams.', status: 'locked', progress: 0 },
+  { id: 'a2-1', title: 'Das Perfekt', level: ProficiencyLevel.A2, topic: 'Conversational Past', description: 'Master the spoken past tense to share your experiences and stories.', status: 'locked', progress: 0 },
+  { id: 'a2-2', title: 'Der Dativ-Fall', level: ProficiencyLevel.A2, topic: 'The Dative Case', description: 'Understand indirect objects and dative prepositions to add precision to your speech.', status: 'locked', progress: 0 },
+  { id: 'a2-3', title: 'Adjektivdeklination', level: ProficiencyLevel.A2, topic: 'Adjective Endings', description: 'Decorate your nouns! Learn the rules for adjective endings in different cases.', status: 'locked', progress: 0 },
+  { id: 'a2-4', title: 'Nebensätze', level: ProficiencyLevel.A2, topic: 'Subordinate Clauses', description: 'Use "weil", "dass", and "wenn" to build complex and logical sentences.', status: 'locked', progress: 0 },
+  { id: 'a2-5', title: 'Formelles Schreiben', level: ProficiencyLevel.A2, topic: 'Formal Writing', description: 'Master the art of writing professional emails, letters, and applications.', status: 'locked', progress: 0 },
+  { id: 'a2-6', title: 'Körper & Gesundheit', level: ProficiencyLevel.A2, topic: 'Health & Body', description: 'Learn to describe symptoms, visit the doctor, and talk about staying fit.', status: 'locked', progress: 0 },
+  { id: 'a2-7', title: 'Beruf & Karriere', level: ProficiencyLevel.A2, topic: 'Work & Career', description: 'Vocabulary and phrases for the workplace, job interviews, and professional life.', status: 'locked', progress: 0 },
+  { id: 'a2-8', title: 'Wohnen & Haushalt', level: ProficiencyLevel.A2, topic: 'Living & Housing', description: 'Discussing your home, finding an apartment, and describing your living space.', status: 'locked', progress: 0 },
 ];
 
 export const NAV_ITEMS = [
