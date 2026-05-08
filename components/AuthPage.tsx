@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { supabase } from '../supabase';
+import { auth } from '../firebase';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  OAuthProvider,
+  sendEmailVerification
+} from 'firebase/auth';
 import Assistant from './Assistant';
 
 interface AuthPageProps {
@@ -12,7 +20,6 @@ const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const [success, setSuccess] = useState<string | null>(null);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -22,18 +29,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
     setSuccess(null);
 
     try {
-      const redirectTo = 'https://deutschmasterpro.netlify.app/';
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        await signInWithEmailAndPassword(auth, email, password);
       } else {
-        const { error } = await supabase.auth.signUp({ 
-          email, 
-          password,
-          options: { emailRedirectTo: redirectTo }
-        });
-        if (error) throw error;
-        setSuccess("Check your email for the confirmation link! You must confirm your email before you can sign in.");
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await sendEmailVerification(userCredential.user);
+        setSuccess("Account created! Check your email for a verification link.");
       }
     } catch (err: any) {
       setError(err.message);
@@ -42,43 +43,18 @@ const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
     }
   };
 
-  const handleGoogleAuth = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
-        }
-      });
-      if (error) throw error;
-    } catch (err: any) {
-      setError(err.message);
+  const handleSocialAuth = async (providerName: 'google' | 'apple' | 'azure') => {
+    let provider;
+    if (providerName === 'google') {
+      provider = new GoogleAuthProvider();
+    } else if (providerName === 'apple') {
+      provider = new OAuthProvider('apple.com');
+    } else {
+      provider = new OAuthProvider('microsoft.com');
     }
-  };
 
-  const handleAppleAuth = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-        options: {
-          redirectTo: window.location.origin
-        }
-      });
-      if (error) throw error;
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
-
-  const handleMicrosoftAuth = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'azure',
-        options: {
-          redirectTo: window.location.origin
-        }
-      });
-      if (error) throw error;
+      await signInWithPopup(auth, provider);
     } catch (err: any) {
       setError(err.message);
     }
@@ -159,21 +135,21 @@ const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
 
             <div className="grid grid-cols-3 gap-3">
               <button 
-                onClick={handleGoogleAuth}
+                onClick={() => handleSocialAuth('google')}
                 className="py-3 px-4 border border-border dark:border-slate-800 rounded-xl flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
                 title="Google"
               >
                 <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
               </button>
               <button 
-                onClick={handleAppleAuth}
+                onClick={() => handleSocialAuth('apple')}
                 className="py-3 px-4 border border-border dark:border-slate-800 rounded-xl flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
                 title="Apple"
               >
                 <img src="https://www.apple.com/favicon.ico" alt="Apple" className="w-5 h-5 dark:invert" />
               </button>
               <button 
-                onClick={handleMicrosoftAuth}
+                onClick={() => handleSocialAuth('azure')}
                 className="py-3 px-4 border border-border dark:border-slate-800 rounded-xl flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
                 title="Microsoft"
               >

@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from './supabase';
-import { User } from '@supabase/supabase-js';
+import { auth, db, handleFirestoreError, OperationType } from './firebase';
+import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { ProficiencyLevel, Lesson, UserProgress } from './types';
 import { INITIAL_LESSONS } from './constants';
 import Sidebar from './components/Sidebar';
@@ -29,11 +30,6 @@ const App: React.FC = () => {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // Check for missing Supabase credentials
-  const isSupabaseConfigured = 
-    supabase.auth.getSession !== undefined && 
-    !(supabase as any).supabaseUrl?.includes('placeholder');
-
   // Theme effect
   useEffect(() => {
     if (isDarkMode) {
@@ -45,52 +41,23 @@ const App: React.FC = () => {
 
   // Auth Listener
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
       setAuthLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setAuthLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
-  // Sync with Supabase
+  // Sync with Firestore
   useEffect(() => {
     if (!user) return;
 
-    const fetchProgress = async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+    const profileRef = doc(db, 'profiles', user.uid);
 
-      if (error && error.code === 'PGRST116') {
-        // Create initial profile if it doesn't exist
-        const initialProgress = {
-          id: user.id,
-          completed_lessons: [],
-          exam_scores: {},
-          total_progress: 0,
-          level: ProficiencyLevel.A1,
-          updated_at: new Date().toISOString()
-        };
-        const { error: insertError } = await supabase.from('profiles').insert([initialProgress]);
-        if (insertError) {
-          console.error('Error creating profile:', insertError);
-          return;
-        }
-        setUserProgress({
-          completedLessons: [],
-          examScores: {},
-          totalProgress: 0,
-          level: ProficiencyLevel.A1
-        });
-      } else if (data) {
+    const unsubscribe = onSnapshot(profileRef, async (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
         const progress: UserProgress = {
           completedLessons: data.completed_lessons || [],
           examScores: data.exam_scores || {},
@@ -110,33 +77,26 @@ const App: React.FC = () => {
           }
           return lesson;
         }));
+      } else {
+        // Create initial profile if it doesn't exist
+        const initialProgress = {
+          completed_lessons: [],
+          exam_scores: {},
+          total_progress: 0,
+          level: ProficiencyLevel.A1,
+          updated_at: new Date().toISOString()
+        };
+        try {
+          await setDoc(profileRef, initialProgress);
+        } catch (error) {
+          handleFirestoreError(error, OperationType.CREATE, `profiles/${user.uid}`);
+        }
       }
-    };
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, `profiles/${user.uid}`);
+    });
 
-    fetchProgress();
-
-    // Real-time listener for profiles
-    const channel = supabase
-      .channel('profile_changes')
-      .on('postgres_changes', { 
-        event: 'UPDATE', 
-        schema: 'public', 
-        table: 'profiles',
-        filter: `id=eq.${user.id}`
-      }, (payload) => {
-        const data = payload.new;
-        setUserProgress({
-          completedLessons: data.completed_lessons || [],
-          examScores: data.exam_scores || {},
-          totalProgress: data.total_progress || 0,
-          level: data.level as ProficiencyLevel || ProficiencyLevel.A1
-        });
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => unsubscribe();
   }, [user]);
 
   // Calculate progress whenever completedLessons changes
@@ -154,16 +114,18 @@ const App: React.FC = () => {
       // Update local state
       setUserProgress(prev => ({ ...prev, completedLessons: nextCompleted }));
       
-      // Update Supabase
+      // Update Firestore
       if (user) {
-        await supabase
-          .from('profiles')
-          .update({
+        const profileRef = doc(db, 'profiles', user.uid);
+        try {
+          await updateDoc(profileRef, {
             completed_lessons: nextCompleted,
             total_progress: Math.round((nextCompleted.length / lessons.length) * 100),
             updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
+          });
+        } catch (error) {
+          handleFirestoreError(error, OperationType.UPDATE, `profiles/${user.uid}`);
+        }
       }
 
       // Unlock next lesson logic
@@ -180,8 +142,25 @@ const App: React.FC = () => {
     setSelectedLesson(null);
   };
 
+  const handleCompleteExam = async (module: string, score: number) => {
+    const nextScores = { ...userProgress.examScores, [module]: score };
+    setUserProgress(prev => ({ ...prev, examScores: nextScores }));
+
+    if (user) {
+      const profileRef = doc(db, 'profiles', user.uid);
+      try {
+        await updateDoc(profileRef, {
+          exam_scores: nextScores,
+          updated_at: new Date().toISOString()
+        });
+      } catch (error) {
+        handleFirestoreError(error, OperationType.UPDATE, `profiles/${user.uid}`);
+      }
+    }
+  };
+
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut(auth);
     setUser(null);
     setShowAuth(false);
     setActiveTab('dashboard');
@@ -211,7 +190,7 @@ const App: React.FC = () => {
       case 'practice':
         return <PracticeView level={userProgress.level} />;
       case 'exams':
-        return <ExamsView level={userProgress.level} onCompleteExam={(score) => console.log('Exam Score:', score)} />;
+        return <ExamsView level={userProgress.level} onCompleteExam={handleCompleteExam} />;
       case 'contribution':
         return <ContributionView />;
       case 'achievements':

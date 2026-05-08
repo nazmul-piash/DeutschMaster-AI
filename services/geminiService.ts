@@ -43,27 +43,31 @@ export const geminiService = {
   },
 
   async speakText(text: string) {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text: `Speak this German text in a warm, friendly, and clear voice: ${text}` }] }],
-      config: {
-        responseModalities: [Modality.AUDIO],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Zephyr' }, // Friendly and clear voice
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-flash-tts-preview",
+        contents: [{ parts: [{ text: `Speak this German text in a warm, friendly, and clear voice: ${text}` }] }],
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Zephyr' }, // Friendly and clear voice
+            },
           },
         },
-      },
-    });
+      });
 
-    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (base64Audio) {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-      const audioBuffer = await decodeAudioData(decodeBase64(base64Audio), audioCtx);
-      const source = audioCtx.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(audioCtx.destination);
-      source.start();
+      const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (base64Audio) {
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+        const audioBuffer = await decodeAudioData(decodeBase64(base64Audio), audioCtx);
+        const source = audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioCtx.destination);
+        source.start();
+      }
+    } catch (error) {
+      console.error("Speech generation failed:", error);
     }
   },
 
@@ -129,7 +133,7 @@ export const geminiService = {
 
   async evaluateWriting(level: ProficiencyLevel, prompt: string, userText: string) {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-3.1-pro-preview',
       contents: `Evaluate this ${level} writing task as a supportive and kind German tutor.
       Prompt: ${prompt}
       Student response: ${userText}

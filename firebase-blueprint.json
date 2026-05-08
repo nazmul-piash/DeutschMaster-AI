@@ -1,0 +1,38 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores progress and data for each user.",
+      "type": "object",
+      "properties": {
+        "completed_lessons": {
+          "type": "array",
+          "description": "List of IDs of completed lessons."
+        },
+        "exam_scores": {
+          "type": "object",
+          "description": "Map of exam IDs to scores."
+        },
+        "total_progress": {
+          "type": "number",
+          "description": "Overall progress percentage."
+        },
+        "level": {
+          "type": "string",
+          "description": "User's current proficiency level (A1, A2)."
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["completed_lessons", "exam_scores", "total_progress", "level"]
+    }
+  },
+  "firestore": {
+    "/profiles/{userId}": {
+      "schema": "UserProfile",
+      "description": "Primary progress tracking for a user."
+    }
+  }
+}

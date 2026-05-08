@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 
 interface ExamsViewProps {
   level: ProficiencyLevel;
-  onCompleteExam: (score: number) => void;
+  onCompleteExam: (module: string, score: number) => void;
 }
 
 type ExamModule = 'Reading' | 'Listening' | 'Writing' | 'Speaking';
@@ -70,7 +70,9 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level, onCompleteExam }) => {
     
     setScore(finalScore);
     setExamFinished(true);
-    onCompleteExam(finalScore);
+    if (selectedModule) {
+      onCompleteExam(selectedModule, finalScore);
+    }
   };
 
   if (examFinished) {
