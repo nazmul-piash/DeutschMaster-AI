@@ -43,7 +43,10 @@ const Dashboard: React.FC<DashboardProps> = ({ progress, lessons }) => {
         </div>
 
         <div className="card border-brand/20 bg-brand/5 flex flex-col p-8">
-          <h3 className="text-lg font-bold text-[var(--text-main)] mb-6">Ready for your next step?</h3>
+          <h3 className="text-lg font-bold text-[var(--text-main)] mb-2">Ready for your next step?</h3>
+          <p className="text-xs text-slate-500 mb-6 font-medium bg-white/50 dark:bg-slate-800/50 p-3 rounded-xl border border-brand/10">
+            💡 Pro tip: Pass any A1 mock exam with 70% or more to unlock Level A2 immediately!
+          </p>
           {nextLesson ? (
             <>
               <div className="bg-[var(--card-bg)] rounded-2xl p-6 mb-8 shadow-sm border border-brand/10">

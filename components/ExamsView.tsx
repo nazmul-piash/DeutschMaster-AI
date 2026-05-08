@@ -250,6 +250,11 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level, onCompleteExam }) => {
              <div className="text-4xl mb-4 relative z-10">🎓</div>
              <h1 className="text-3xl font-bold text-slate-800 dark:text-white relative z-10">Mock Exam: {level}</h1>
              <p className="text-brand font-medium uppercase tracking-widest text-xs mt-2 relative z-10">Choose your module to begin</p>
+             {level === ProficiencyLevel.A1 && (
+               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 dark:bg-slate-800/90 backdrop-blur px-4 py-1.5 rounded-full border border-brand/20 shadow-sm z-20">
+                 <p className="text-[10px] text-brand-600 font-bold whitespace-nowrap">✨ Skip to A2 by scoring 70%+ in any module!</p>
+               </div>
+             )}
           </div>
           
           <div className="p-10">

@@ -5,6 +5,7 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { ProficiencyLevel, Lesson, UserProgress } from './types';
 import { INITIAL_LESSONS } from './constants';
+import { motion, AnimatePresence } from 'motion/react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import LessonsView from './components/LessonsView';
@@ -29,6 +30,7 @@ const App: React.FC = () => {
   const [lessons, setLessons] = useState<Lesson[]>(INITIAL_LESSONS);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [levelUpMessage, setLevelUpMessage] = useState<string | null>(null);
 
   // Theme effect
   useEffect(() => {
@@ -66,16 +68,40 @@ const App: React.FC = () => {
         };
         setUserProgress(progress);
         
-        // Update lessons status based on fetched progress
-        setLessons(prev => prev.map(lesson => {
+        // Update lessons status based on fetched progress and level
+        setLessons(prev => INITIAL_LESSONS.map((lesson, index, all) => {
+          // If completed
           if (progress.completedLessons.includes(lesson.id)) {
-            return { ...lesson, status: 'completed', progress: 100 };
+            return { ...lesson, status: 'completed' as const, progress: 100 };
           }
-          const index = prev.findIndex(l => l.id === lesson.id);
-          if (index > 0 && progress.completedLessons.includes(prev[index-1].id)) {
-            return { ...lesson, status: 'available' };
+
+          // Check if lesson level is higher than user level
+          if (lesson.level === ProficiencyLevel.A2 && progress.level === ProficiencyLevel.A1) {
+             return { ...lesson, status: 'locked' as const, progress: 0 };
           }
-          return lesson;
+
+          // If the level is lower than current level but not completed (shouldn't happen with strict flow, but safe)
+          // it stays available or behaves naturally.
+
+          // First incomplete lesson of the current level should be available
+          const currentLevelLessons = all.filter(l => l.level === progress.level);
+          const firstIncompleteInLevel = currentLevelLessons.find(l => !progress.completedLessons.includes(l.id));
+          
+          if (lesson.id === firstIncompleteInLevel?.id) {
+            return { ...lesson, status: 'available' as const, progress: 0 };
+          }
+
+          // Unlock next lesson logic within the same level
+          // A lesson is available if the previous one in the SAME LEVEL is completed
+          const prevLesson = all[index - 1];
+          if (prevLesson && 
+              prevLesson.level === lesson.level && 
+              progress.completedLessons.includes(prevLesson.id) && 
+              lesson.level === progress.level) {
+            return { ...lesson, status: 'available' as const, progress: 0 };
+          }
+
+          return { ...lesson, status: 'locked' as const, progress: 0 };
         }));
       } else {
         // Create initial profile if it doesn't exist
@@ -107,52 +133,71 @@ const App: React.FC = () => {
     setUserProgress(prev => ({ ...prev, totalProgress: percentage }));
   }, [userProgress.completedLessons, lessons.length]);
 
+  const handleLevelUp = async (newLevel: ProficiencyLevel) => {
+    if (user) {
+      const profileRef = doc(db, 'profiles', user.uid);
+      try {
+        await updateDoc(profileRef, {
+          level: newLevel,
+          updated_at: new Date().toISOString()
+        });
+        setLevelUpMessage(`Glückwunsch! You have officially reached level ${newLevel}!`);
+      } catch (error) {
+        handleFirestoreError(error, OperationType.UPDATE, `profiles/${user.uid}`);
+      }
+    }
+  };
+
   const handleCompleteLesson = async (lessonId: string) => {
     if (!userProgress.completedLessons.includes(lessonId)) {
       const nextCompleted = [...userProgress.completedLessons, lessonId];
-      
-      // Update local state
-      setUserProgress(prev => ({ ...prev, completedLessons: nextCompleted }));
       
       // Update Firestore
       if (user) {
         const profileRef = doc(db, 'profiles', user.uid);
         try {
-          await updateDoc(profileRef, {
+          const updates: any = {
             completed_lessons: nextCompleted,
-            total_progress: Math.round((nextCompleted.length / lessons.length) * 100),
+            total_progress: Math.round((nextCompleted.length / INITIAL_LESSONS.length) * 100),
             updated_at: new Date().toISOString()
-          });
+          };
+
+          // Check if all A1 lessons are done to suggest leveling up
+          const a1Lessons = INITIAL_LESSONS.filter(l => l.level === ProficiencyLevel.A1);
+          const completedA1 = nextCompleted.filter(id => a1Lessons.some(l => l.id === id));
+          
+          if (completedA1.length === a1Lessons.length && userProgress.level === ProficiencyLevel.A1) {
+            updates.level = ProficiencyLevel.A2;
+            setLevelUpMessage("You've completed all A1 lessons! A2 is now unlocked.");
+          }
+
+          await updateDoc(profileRef, updates);
         } catch (error) {
           handleFirestoreError(error, OperationType.UPDATE, `profiles/${user.uid}`);
         }
       }
-
-      // Unlock next lesson logic
-      setLessons(prev => {
-        const index = prev.findIndex(l => l.id === lessonId);
-        const updated = [...prev];
-        updated[index] = { ...updated[index], status: 'completed', progress: 100 };
-        if (updated[index + 1]) {
-          updated[index + 1] = { ...updated[index + 1], status: 'available' };
-        }
-        return updated;
-      });
     }
     setSelectedLesson(null);
   };
 
   const handleCompleteExam = async (module: string, score: number) => {
     const nextScores = { ...userProgress.examScores, [module]: score };
-    setUserProgress(prev => ({ ...prev, examScores: nextScores }));
-
+    
     if (user) {
       const profileRef = doc(db, 'profiles', user.uid);
       try {
-        await updateDoc(profileRef, {
+        const updates: any = {
           exam_scores: nextScores,
           updated_at: new Date().toISOString()
-        });
+        };
+
+        // If user passes A1 exam with high score, unlock A2
+        if (userProgress.level === ProficiencyLevel.A1 && score >= 70) {
+          updates.level = ProficiencyLevel.A2;
+          setLevelUpMessage(`Incredible! Your exam score of ${score}% has unlocked Level A2 directly!`);
+        }
+
+        await updateDoc(profileRef, updates);
       } catch (error) {
         handleFirestoreError(error, OperationType.UPDATE, `profiles/${user.uid}`);
       }
@@ -186,7 +231,7 @@ const App: React.FC = () => {
       case 'dashboard':
         return <Dashboard progress={userProgress} lessons={lessons} />;
       case 'lessons':
-        return <LessonsView lessons={lessons} onSelectLesson={setSelectedLesson} />;
+        return <LessonsView lessons={lessons} onSelectLesson={setSelectedLesson} userLevel={userProgress.level} />;
       case 'practice':
         return <PracticeView level={userProgress.level} />;
       case 'exams':
@@ -246,6 +291,33 @@ const App: React.FC = () => {
         </header>
 
         <div className="max-w-6xl mx-auto p-8">
+          <AnimatePresence>
+            {levelUpMessage && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="mb-8"
+              >
+                <div className="bg-brand text-white p-6 rounded-3xl shadow-xl shadow-brand/20 flex justify-between items-center relative overflow-hidden group">
+                   <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out"></div>
+                   <div className="relative z-10 flex items-center gap-4">
+                     <span className="text-3xl">🎉</span>
+                     <div>
+                       <h4 className="font-bold text-lg">Level Up!</h4>
+                       <p className="text-white/90 text-sm">{levelUpMessage}</p>
+                     </div>
+                   </div>
+                   <button 
+                    onClick={() => setLevelUpMessage(null)}
+                    className="relative z-10 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold uppercase tracking-widest transition-all"
+                   >
+                     Awesome!
+                   </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           {renderContent()}
         </div>
       </main>

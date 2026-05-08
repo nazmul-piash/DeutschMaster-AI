@@ -2,7 +2,16 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { ProficiencyLevel, QuizQuestion } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const getApiKey = () => {
+  const key = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  if (!key || key === 'undefined') {
+    console.error("GEMINI_API_KEY is not defined. Please check your environment variables.");
+    return "";
+  }
+  return key;
+};
+
+const ai = new GoogleGenAI({ apiKey: getApiKey() });
 
 // Audio Decoding Helpers
 function decodeBase64(base64: string) {

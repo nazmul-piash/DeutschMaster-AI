@@ -1,13 +1,18 @@
 
-import React from 'react';
-import { Lesson } from '../types';
+import React, { useState } from 'react';
+import { Lesson, ProficiencyLevel } from '../types';
 
 interface LessonsViewProps {
   lessons: Lesson[];
   onSelectLesson: (lesson: Lesson) => void;
+  userLevel: ProficiencyLevel;
 }
 
-const LessonsView: React.FC<LessonsViewProps> = ({ lessons, onSelectLesson }) => {
+const LessonsView: React.FC<LessonsViewProps> = ({ lessons, onSelectLesson, userLevel }) => {
+  const [activeFilter, setActiveFilter] = useState<ProficiencyLevel>(userLevel);
+
+  const filteredLessons = lessons.filter(l => l.level === activeFilter);
+
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-100 dark:border-slate-800 pb-8">
@@ -16,13 +21,23 @@ const LessonsView: React.FC<LessonsViewProps> = ({ lessons, onSelectLesson }) =>
           <p className="text-lg text-slate-500">Explore the beauty of the German language, one step at a time.</p>
         </div>
         <div className="flex gap-3">
-           <button className="px-6 py-2 bg-brand/10 text-brand rounded-full text-xs font-bold uppercase tracking-widest hover:bg-brand/20 transition-all">A1 Beginner</button>
-           <button className="px-6 py-2 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">A2 Elementary</button>
+           <button 
+            onClick={() => setActiveFilter(ProficiencyLevel.A1)}
+            className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${activeFilter === ProficiencyLevel.A1 ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'bg-brand/10 text-brand hover:bg-brand/20'}`}
+           >
+             A1 Beginner
+           </button>
+           <button 
+            onClick={() => setActiveFilter(ProficiencyLevel.A2)}
+            className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${activeFilter === ProficiencyLevel.A2 ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+           >
+             A2 Elementary
+           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {lessons.map((lesson) => (
+        {filteredLessons.map((lesson) => (
           <div 
             key={lesson.id}
             onClick={() => lesson.status !== 'locked' && onSelectLesson(lesson)}
