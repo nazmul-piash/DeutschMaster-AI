@@ -115,10 +115,10 @@ export const geminiService = {
     return JSON.parse(response.text || "[]");
   },
 
-  async generateExamContent(level: ProficiencyLevel, module: string) {
+  async generateExamContent(level: ProficiencyLevel, module: string, customPrompt?: string) {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Generate a professional ${level} German exam for the ${module} module.
+      contents: customPrompt || `Generate a professional ${level} German exam for the ${module} module.
       If module is 'Reading', provide a text and 5 questions.
       If module is 'Listening', provide a text that will be read aloud and 5 questions.
       If module is 'Writing', provide a prompt.

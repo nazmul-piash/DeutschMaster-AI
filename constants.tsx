@@ -5,10 +5,16 @@ import { ProficiencyLevel, Lesson } from './types';
 export const INITIAL_LESSONS: Lesson[] = [
   // A1 BEGINNER
   { id: 'a1-1', title: 'Begrüßungen', level: ProficiencyLevel.A1, topic: 'Greetings & Introductions', description: 'Learn how to say hello and introduce yourself to new friends!', status: 'available', progress: 0 },
-  { id: 'a1-2', title: 'Der Artikel: Der, Die, Das', level: ProficiencyLevel.A1, topic: 'Gender & Definite Articles', description: 'The heart of German grammar: getting to know noun genders.', status: 'locked', progress: 0 },
-  { id: 'a1-3', title: 'Zahlen & Uhrzeit', level: ProficiencyLevel.A1, topic: 'Numbers and Time', description: 'Counting and telling time for your daily adventures.', status: 'locked', progress: 0 },
+  { id: 'a1-2', title: 'Der Artikel', level: ProficiencyLevel.A1, topic: 'Definite Articles (der, die, das)', description: 'Getting to know noun genders and basic articles.', status: 'locked', progress: 0 },
+  { id: 'a1-3', title: 'Zahlen & Uhrzeit', level: ProficiencyLevel.A1, topic: 'Numbers and Telling Time', description: 'Counting and telling time for your daily adventures.', status: 'locked', progress: 0 },
   { id: 'a1-4', title: 'Nominativ & Akkusativ', level: ProficiencyLevel.A1, topic: 'Basic Cases', description: 'Building your first complete sentences with confidence.', status: 'locked', progress: 0 },
-  { id: 'a1-5', title: 'Essen & Trinken', level: ProficiencyLevel.A1, topic: 'Food and Dining', description: 'Ordering your favorite treats at a cozy German café.', status: 'locked', progress: 0 },
+  { id: 'a1-5', title: 'Familie & Freunde', level: ProficiencyLevel.A1, topic: 'Family and Social Life', description: 'Describe your family members and circle of friends.', status: 'locked', progress: 0 },
+  { id: 'a1-6', title: 'Hobbys & Freizeit', level: ProficiencyLevel.A1, topic: 'Leisure Activities', description: 'Talk about what you love to do in your free time.', status: 'locked', progress: 0 },
+  { id: 'a1-7', title: 'Essen & Trinken', level: ProficiencyLevel.A1, topic: 'Food and Dining', description: 'Ordering your favorite treats at a cozy German café.', status: 'locked', progress: 0 },
+  { id: 'a1-8', title: 'Alltag & Tagesablauf', level: ProficiencyLevel.A1, topic: 'Daily Routine', description: 'Describing a typical day and using separable verbs.', status: 'locked', progress: 0 },
+  { id: 'a1-9', title: 'Einkaufen & Kleidung', level: ProficiencyLevel.A1, topic: 'Shopping and Clothes', description: 'Learn labels and phrases for shopping and fashion.', status: 'locked', progress: 0 },
+  { id: 'a1-10', title: 'Mein Zuhause', level: ProficiencyLevel.A1, topic: 'My Home', description: 'Describe your living space and household items.', status: 'locked', progress: 0 },
+  { id: 'a1-11', title: 'Wegbeschreibung', level: ProficiencyLevel.A1, topic: 'Directions', description: 'Asking for and giving directions in a German city.', status: 'locked', progress: 0 },
   
   // A2 ELEMENTARY
   { id: 'a2-1', title: 'Das Perfekt', level: ProficiencyLevel.A2, topic: 'Conversational Past', description: 'Master the spoken past tense to share your experiences and stories.', status: 'locked', progress: 0 },

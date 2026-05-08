@@ -26,7 +26,7 @@ export interface QuizQuestion {
 
 export interface UserProgress {
   completedLessons: string[];
-  examScores: Record<string, number>;
+  examScores: Record<string, Record<string, number>>; // { A1: { Reading: 80, ... }, A2: { ... } }
   totalProgress: number;
   level: ProficiencyLevel;
 }

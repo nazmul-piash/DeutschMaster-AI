@@ -80,6 +80,9 @@ const App: React.FC = () => {
              return { ...lesson, status: 'locked' as const, progress: 0 };
           }
 
+          // ALL A1 lessons remain available even if user is A2, they behave normally based on completion
+          const isA1LessonForA2User = lesson.level === ProficiencyLevel.A1 && progress.level === ProficiencyLevel.A2;
+
           // If the level is lower than current level but not completed (shouldn't happen with strict flow, but safe)
           // it stays available or behaves naturally.
 
@@ -180,8 +183,12 @@ const App: React.FC = () => {
     setSelectedLesson(null);
   };
 
-  const handleCompleteExam = async (module: string, score: number) => {
-    const nextScores = { ...userProgress.examScores, [module]: score };
+  const handleCompleteExam = async (examLevel: ProficiencyLevel, module: string, score: number) => {
+    const currentScores = userProgress.examScores[examLevel] || {};
+    const nextScores = { 
+      ...userProgress.examScores, 
+      [examLevel]: { ...currentScores, [module]: score } 
+    };
     
     if (user) {
       const profileRef = doc(db, 'profiles', user.uid);
@@ -191,10 +198,16 @@ const App: React.FC = () => {
           updated_at: new Date().toISOString()
         };
 
-        // If user passes A1 exam with high score, unlock A2
-        if (userProgress.level === ProficiencyLevel.A1 && score >= 70) {
+        // Standard passing requirement: Pass ALL 4 modules (Reading, Listening, Writing, Speaking) with 70%
+        const levelScores = nextScores[examLevel];
+        const allModules = ['Reading', 'Listening', 'Writing', 'Speaking'];
+        const passedAllModules = allModules.every(m => levelScores[m] >= 70);
+
+        if (examLevel === ProficiencyLevel.A1 && userProgress.level === ProficiencyLevel.A1 && passedAllModules) {
           updates.level = ProficiencyLevel.A2;
-          setLevelUpMessage(`Incredible! Your exam score of ${score}% has unlocked Level A2 directly!`);
+          setLevelUpMessage(`Incredible! You passed all A1 exam modules with 70%+ scores. Level A2 is now officially unlocked!`);
+        } else if (score >= 70) {
+          // Individual module success feedback (non-leveling)
         }
 
         await updateDoc(profileRef, updates);
@@ -235,7 +248,7 @@ const App: React.FC = () => {
       case 'practice':
         return <PracticeView level={userProgress.level} />;
       case 'exams':
-        return <ExamsView level={userProgress.level} onCompleteExam={handleCompleteExam} />;
+        return <ExamsView level={userProgress.level} examScores={userProgress.examScores} onCompleteExam={handleCompleteExam} />;
       case 'contribution':
         return <ContributionView />;
       case 'achievements':
