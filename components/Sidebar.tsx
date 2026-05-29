@@ -7,14 +7,10 @@ interface SidebarProps {
   setActiveTab: (tab: string) => void;
   isDarkMode: boolean;
   toggleTheme: () => void;
-  isAdmin?: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isDarkMode, toggleTheme, isAdmin = false }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isDarkMode, toggleTheme }) => {
   const menuItems = [...NAV_ITEMS];
-  if (isAdmin) {
-    menuItems.push({ label: 'Admin Panel', icon: '⚙️', id: 'admin' });
-  }
 
   return (
     <aside className="w-64 bg-white dark:bg-[#252520] border-r border-slate-100 dark:border-[#353530] flex flex-col h-screen sticky top-0 font-sans shadow-sm transition-colors duration-300">

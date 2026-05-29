@@ -15,7 +15,6 @@ import LessonModal from './components/LessonModal';
 import ContributionView from './components/ContributionView';
 import LandingPage from './components/LandingPage';
 import AuthPage from './components/AuthPage';
-import AdminDashboard from './components/AdminDashboard';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -249,8 +248,7 @@ const App: React.FC = () => {
         return <ExamsView level={userProgress.level} examScores={userProgress.examScores} onCompleteExam={handleCompleteExam} />;
       case 'contribution':
         return <ContributionView />;
-      case 'admin':
-        return <AdminDashboard />;
+
       case 'achievements':
         return (
           <div className="animate-in fade-in duration-700">
@@ -275,8 +273,6 @@ const App: React.FC = () => {
     }
   };
 
-  const isUserAdmin = user && (user.email === 'md.nazmulhudapiash@gmail.com' || userProgress.isAdmin === true);
-
   return (
     <div className="flex min-h-screen bg-[var(--bg-app)] transition-colors duration-300">
       <Sidebar 
@@ -284,7 +280,6 @@ const App: React.FC = () => {
         setActiveTab={setActiveTab} 
         isDarkMode={isDarkMode}
         toggleTheme={() => setIsDarkMode(!isDarkMode)}
-        isAdmin={!!isUserAdmin}
       />
       <main className="flex-1 overflow-y-auto">
         <header className="bg-[var(--card-bg)]/80 backdrop-blur-md border-b border-[var(--border-color)] px-8 py-4 flex justify-between items-center sticky top-0 z-10 transition-colors duration-300">
