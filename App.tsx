@@ -43,17 +43,71 @@ const App: React.FC = () => {
 
   // Auth Listener
   useEffect(() => {
+    const localUserStr = localStorage.getItem('dm_local_user');
+    if (localUserStr) {
+      try {
+        const localUser = JSON.parse(localUserStr);
+        setUser(localUser);
+        setAuthLoading(false);
+      } catch (err) {
+        console.error("Failed to parse local user session:", err);
+      }
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
+      if (firebaseUser) {
+        setUser(firebaseUser);
+        localStorage.removeItem('dm_local_user');
+      } else {
+        if (!localStorage.getItem('dm_local_user')) {
+          setUser(null);
+        }
+      }
       setAuthLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  // Sync with Firestore
+  // Sync Profile with Database (Firestore) or Safe Local Sandbox Storage
   useEffect(() => {
     if (!user) return;
+
+    if (user.isLocalSession) {
+      const key = `dm_profile_v2_${user.uid}`;
+      const localProfileStr = localStorage.getItem(key);
+      if (localProfileStr) {
+        try {
+          const data = JSON.parse(localProfileStr);
+          setUserProgress({
+            completedLessons: data.completed_lessons || [],
+            examScores: data.exam_scores || {},
+            totalProgress: data.total_progress || 0,
+            level: (data.level as ProficiencyLevel) || ProficiencyLevel.A1,
+            isAdmin: false
+          });
+        } catch (err) {
+          console.error("Failed to parse local profile:", err);
+        }
+      } else {
+        const initialProgress = {
+          completed_lessons: [],
+          exam_scores: {},
+          total_progress: 0,
+          level: ProficiencyLevel.A1,
+          updated_at: new Date().toISOString()
+        };
+        localStorage.setItem(key, JSON.stringify(initialProgress));
+        setUserProgress({
+          completedLessons: [],
+          examScores: {},
+          totalProgress: 0,
+          level: ProficiencyLevel.A1,
+          isAdmin: false
+        });
+      }
+      return;
+    }
 
     const profileRef = doc(db, 'profiles', user.uid);
 
@@ -68,43 +122,7 @@ const App: React.FC = () => {
           isAdmin: data.isAdmin === true
         };
         setUserProgress(progress);
-        
-        // Update lessons status based on fetched progress and level
-        setLessons(prev => INITIAL_LESSONS.map((lesson, index, all) => {
-          // 1. If explicitly completed, it stays completed
-          if (progress.completedLessons.includes(lesson.id)) {
-            return { ...lesson, status: 'completed' as const, progress: 100 };
-          }
-
-          // 2. If user has reached A2, all A1 lessons should be unlocked/available (not completed yet)
-          if (lesson.level === ProficiencyLevel.A1 && progress.level === ProficiencyLevel.A2) {
-            return { ...lesson, status: 'available' as const, progress: 0 };
-          }
-
-          // 3. Prevent accessing A2 if still in A1
-          if (lesson.level === ProficiencyLevel.A2 && progress.level === ProficiencyLevel.A1) {
-             return { ...lesson, status: 'locked' as const, progress: 0 };
-          }
-
-          // 4. Sequential unlocking for the current level
-          const currentLevelLessons = all.filter(l => l.level === progress.level);
-          const firstIncompleteInLevel = currentLevelLessons.find(l => !progress.completedLessons.includes(l.id));
-          
-          if (lesson.id === firstIncompleteInLevel?.id) {
-            return { ...lesson, status: 'available' as const, progress: 0 };
-          }
-
-          const prevLesson = all[index - 1];
-          if (prevLesson && 
-              prevLesson.level === lesson.level && 
-              progress.completedLessons.includes(prevLesson.id)) {
-            return { ...lesson, status: 'available' as const, progress: 0 };
-          }
-
-          return { ...lesson, status: 'locked' as const, progress: 0 };
-        }));
       } else {
-        // Create initial profile if it doesn't exist
         const initialProgress = {
           completed_lessons: [],
           exam_scores: {},
@@ -125,16 +143,75 @@ const App: React.FC = () => {
     return () => unsubscribe();
   }, [user]);
 
-  // Calculate progress whenever completedLessons changes
+  // Synchronize lessons list status with active userProgress reactive changes
+  useEffect(() => {
+    setLessons(prev => INITIAL_LESSONS.map((lesson, index, all) => {
+      // 1. If explicitly completed, it stays completed
+      if (userProgress.completedLessons.includes(lesson.id)) {
+        return { ...lesson, status: 'completed' as const, progress: 100 };
+      }
+
+      // 2. If user has reached A2, all A1 lessons should be unlocked/available (not completed yet)
+      if (lesson.level === ProficiencyLevel.A1 && userProgress.level === ProficiencyLevel.A2) {
+        return { ...lesson, status: 'available' as const, progress: 0 };
+      }
+
+      // 3. Prevent accessing A2 if still in A1
+      if (lesson.level === ProficiencyLevel.A2 && userProgress.level === ProficiencyLevel.A1) {
+         return { ...lesson, status: 'locked' as const, progress: 0 };
+      }
+
+      // 4. Sequential unlocking for the current level
+      const currentLevelLessons = all.filter(l => l.level === userProgress.level);
+      const firstIncompleteInLevel = currentLevelLessons.find(l => !userProgress.completedLessons.includes(l.id));
+      
+      if (lesson.id === firstIncompleteInLevel?.id) {
+        return { ...lesson, status: 'available' as const, progress: 0 };
+      }
+
+      const prevLesson = all[index - 1];
+      if (prevLesson && 
+          prevLesson.level === lesson.level && 
+          userProgress.completedLessons.includes(prevLesson.id)) {
+        return { ...lesson, status: 'available' as const, progress: 0 };
+      }
+
+      return { ...lesson, status: 'locked' as const, progress: 0 };
+    }));
+  }, [userProgress.completedLessons, userProgress.level]);
+
+  // Calculate and sync progress of user levels
   useEffect(() => {
     const total = lessons.length;
     const completedCount = userProgress.completedLessons.length;
     const percentage = Math.round((completedCount / total) * 100);
-    setUserProgress(prev => ({ ...prev, totalProgress: percentage }));
-  }, [userProgress.completedLessons, lessons.length]);
+    if (percentage !== userProgress.totalProgress) {
+      setUserProgress(prev => ({ ...prev, totalProgress: percentage }));
+    }
+  }, [userProgress.completedLessons, lessons.length, userProgress.totalProgress]);
 
   const handleLevelUp = async (newLevel: ProficiencyLevel) => {
     if (user) {
+      const updatedProgress = {
+        ...userProgress,
+        level: newLevel,
+        updated_at: new Date().toISOString()
+      };
+
+      if (user.isLocalSession) {
+        const key = `dm_profile_v2_${user.uid}`;
+        localStorage.setItem(key, JSON.stringify({
+          completed_lessons: userProgress.completedLessons,
+          total_progress: userProgress.totalProgress,
+          level: newLevel,
+          exam_scores: userProgress.examScores,
+          updated_at: new Date().toISOString()
+        }));
+        setUserProgress(updatedProgress);
+        setLevelUpMessage(`Glückwunsch! You have officially reached level ${newLevel}!`);
+        return;
+      }
+
       const profileRef = doc(db, 'profiles', user.uid);
       try {
         await updateDoc(profileRef, {
@@ -151,29 +228,51 @@ const App: React.FC = () => {
   const handleCompleteLesson = async (lessonId: string) => {
     if (!userProgress.completedLessons.includes(lessonId)) {
       const nextCompleted = [...userProgress.completedLessons, lessonId];
+      const totalProgress = Math.round((nextCompleted.length / INITIAL_LESSONS.length) * 100);
       
-      // Update Firestore
+      let nextLevel = userProgress.level;
+      const a1Lessons = INITIAL_LESSONS.filter(l => l.level === ProficiencyLevel.A1);
+      const completedA1 = nextCompleted.filter(id => a1Lessons.some(l => l.id === id));
+      
+      if (completedA1.length === a1Lessons.length && userProgress.level === ProficiencyLevel.A1) {
+        nextLevel = ProficiencyLevel.A2;
+        setLevelUpMessage("You've completed all A1 lessons! A2 is now unlocked.");
+      }
+
+      const updatedProgress: UserProgress = {
+        ...userProgress,
+        completedLessons: nextCompleted,
+        totalProgress,
+        level: nextLevel,
+        updated_at: new Date().toISOString()
+      };
+
       if (user) {
-        const profileRef = doc(db, 'profiles', user.uid);
-        try {
-          const updates: any = {
+        if (user.isLocalSession) {
+          const key = `dm_profile_v2_${user.uid}`;
+          localStorage.setItem(key, JSON.stringify({
             completed_lessons: nextCompleted,
-            total_progress: Math.round((nextCompleted.length / INITIAL_LESSONS.length) * 100),
+            total_progress: totalProgress,
+            level: nextLevel,
+            exam_scores: userProgress.examScores,
             updated_at: new Date().toISOString()
-          };
-
-          // Check if all A1 lessons are done to suggest leveling up
-          const a1Lessons = INITIAL_LESSONS.filter(l => l.level === ProficiencyLevel.A1);
-          const completedA1 = nextCompleted.filter(id => a1Lessons.some(l => l.id === id));
-          
-          if (completedA1.length === a1Lessons.length && userProgress.level === ProficiencyLevel.A1) {
-            updates.level = ProficiencyLevel.A2;
-            setLevelUpMessage("You've completed all A1 lessons! A2 is now unlocked.");
+          }));
+          setUserProgress(updatedProgress);
+        } else {
+          const profileRef = doc(db, 'profiles', user.uid);
+          try {
+            const updates: any = {
+              completed_lessons: nextCompleted,
+              total_progress: totalProgress,
+              updated_at: new Date().toISOString()
+            };
+            if (nextLevel !== userProgress.level) {
+              updates.level = nextLevel;
+            }
+            await updateDoc(profileRef, updates);
+          } catch (error) {
+            handleFirestoreError(error, OperationType.UPDATE, `profiles/${user.uid}`);
           }
-
-          await updateDoc(profileRef, updates);
-        } catch (error) {
-          handleFirestoreError(error, OperationType.UPDATE, `profiles/${user.uid}`);
         }
       }
     }
@@ -186,36 +285,60 @@ const App: React.FC = () => {
       ...userProgress.examScores, 
       [examLevel]: { ...currentScores, [module]: score } 
     };
-    
+
+    // Standard passing requirement: Pass ALL 4 modules with 70%
+    const levelScores = nextScores[examLevel];
+    const allModules = ['Reading', 'Listening', 'Writing', 'Speaking'];
+    const passedAllModules = allModules.every(m => levelScores[m] >= 70);
+
+    let nextLevel = userProgress.level;
+    if (examLevel === ProficiencyLevel.A1 && userProgress.level === ProficiencyLevel.A1 && passedAllModules) {
+      nextLevel = ProficiencyLevel.A2;
+      setLevelUpMessage(`Incredible! You passed all A1 exam modules with 70%+ scores. Level A2 is now officially unlocked!`);
+    }
+
+    const updatedProgress: UserProgress = {
+      ...userProgress,
+      examScores: nextScores,
+      level: nextLevel,
+      updated_at: new Date().toISOString()
+    };
+
     if (user) {
-      const profileRef = doc(db, 'profiles', user.uid);
-      try {
-        const updates: any = {
+      if (user.isLocalSession) {
+        const key = `dm_profile_v2_${user.uid}`;
+        localStorage.setItem(key, JSON.stringify({
+          completed_lessons: userProgress.completedLessons,
+          total_progress: userProgress.totalProgress,
+          level: nextLevel,
           exam_scores: nextScores,
           updated_at: new Date().toISOString()
-        };
-
-        // Standard passing requirement: Pass ALL 4 modules (Reading, Listening, Writing, Speaking) with 70%
-        const levelScores = nextScores[examLevel];
-        const allModules = ['Reading', 'Listening', 'Writing', 'Speaking'];
-        const passedAllModules = allModules.every(m => levelScores[m] >= 70);
-
-        if (examLevel === ProficiencyLevel.A1 && userProgress.level === ProficiencyLevel.A1 && passedAllModules) {
-          updates.level = ProficiencyLevel.A2;
-          setLevelUpMessage(`Incredible! You passed all A1 exam modules with 70%+ scores. Level A2 is now officially unlocked!`);
-        } else if (score >= 70) {
-          // Individual module success feedback (non-leveling)
+        }));
+        setUserProgress(updatedProgress);
+      } else {
+        const profileRef = doc(db, 'profiles', user.uid);
+        try {
+          const updates: any = {
+            exam_scores: nextScores,
+            updated_at: new Date().toISOString()
+          };
+          if (nextLevel !== userProgress.level) {
+            updates.level = nextLevel;
+          }
+          await updateDoc(profileRef, updates);
+        } catch (error) {
+          handleFirestoreError(error, OperationType.UPDATE, `profiles/${user.uid}`);
         }
-
-        await updateDoc(profileRef, updates);
-      } catch (error) {
-        handleFirestoreError(error, OperationType.UPDATE, `profiles/${user.uid}`);
       }
     }
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
+    if (user && user.isLocalSession) {
+      localStorage.removeItem('dm_local_user');
+    } else {
+      await signOut(auth);
+    }
     setUser(null);
     setShowAuth(false);
     setActiveTab('dashboard');
@@ -231,7 +354,7 @@ const App: React.FC = () => {
 
   if (!user) {
     if (showAuth) {
-      return <AuthPage onBack={() => setShowAuth(false)} />;
+      return <AuthPage onBack={() => setShowAuth(false)} onLocalLogin={(localUser) => setUser(localUser)} />;
     }
     return <LandingPage onStart={() => setShowAuth(true)} />;
   }
