@@ -29,6 +29,7 @@ export interface UserProgress {
   examScores: Record<string, Record<string, number>>; // { A1: { Reading: 80, ... }, A2: { ... } }
   totalProgress: number;
   level: ProficiencyLevel;
+  isAdmin?: boolean;
 }
 
 export interface ExamSession {

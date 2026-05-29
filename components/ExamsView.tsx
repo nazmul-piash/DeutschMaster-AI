@@ -24,6 +24,7 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level: currentLevel, examScores, 
   const [examFinished, setExamFinished] = useState(false);
   const [score, setScore] = useState(0);
   const [viewMode, setViewMode] = useState<'interactive' | 'official'>('interactive');
+  const [showTranslation, setShowTranslation] = useState(false);
 
   const officialPapers = [
     {
@@ -58,7 +59,7 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level: currentLevel, examScores, 
     setExamStarted(true);
     setLoading(true);
     try {
-      // Improved prompt for variety and structure
+      // Improved prompt for variety and structure with translations
       const prompt = `Generate a unique mock exam module for German ${examLevel} Level. Module: ${module}.
       
       Requirements:
@@ -68,8 +69,9 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level: currentLevel, examScores, 
       - For Reading/Listening: Provide a coherent text and 5 varied multiple choice questions.
       - For Writing: Provide a formal or informal prompt (letter, email, or post).
       - For Speaking: Provide 3 discussion prompts and a short picture description task.
+      - CRITICAL: Provide English translations for the main text, every question, the writing prompt, and all speaking points.
       
-      Be thorough and educational.`;
+      Return a JSON object with fields like 'text', 'textTranslation', 'questions' (each with 'question', 'questionTranslation', 'options', 'correctAnswer'), 'writingPrompt', 'writingPromptTranslation', 'speakingPoints', 'speakingPointsTranslation'.`;
       
       const content = await geminiService.generateExamContent(examLevel, module, prompt);
       setExamContent(content);
@@ -199,6 +201,19 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level: currentLevel, examScores, 
                   <div className="text-slate-600 leading-relaxed text-lg italic">
                     {examContent.text}
                   </div>
+                  {examContent.textTranslation && (
+                    <button 
+                      onClick={() => setShowTranslation(!showTranslation)}
+                      className="mt-4 text-[10px] uppercase tracking-widest font-bold text-slate-400 hover:text-brand transition-all"
+                    >
+                      {showTranslation ? "Hide English Translation" : "Show English Translation"}
+                    </button>
+                  )}
+                  {showTranslation && examContent.textTranslation && (
+                     <p className="mt-2 text-sm text-slate-400 italic bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-dashed border-slate-200">
+                        {examContent.textTranslation}
+                     </p>
+                  )}
                 </div>
 
                 <div className="space-y-6">
@@ -213,7 +228,12 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level: currentLevel, examScores, 
                       </div>
                     </div>
                     
-                    <h4 className="text-xl font-bold mb-8">{examContent.questions[currentQuestionIndex].question}</h4>
+                    <h4 className="text-xl font-bold mb-4">{examContent.questions[currentQuestionIndex].question}</h4>
+                    {showTranslation && examContent.questions[currentQuestionIndex].questionTranslation && (
+                      <p className="text-sm text-slate-400 italic mb-6 animate-in slide-in-from-top-1">
+                         "{examContent.questions[currentQuestionIndex].questionTranslation}"
+                      </p>
+                    )}
                     
                     <div className="space-y-3">
                       {examContent.questions[currentQuestionIndex].options.map((option: string, i: number) => (
@@ -246,9 +266,22 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level: currentLevel, examScores, 
             {selectedModule === 'Writing' && examContent && (
               <div className="card max-w-2xl mx-auto">
                 <h3 className="text-2xl font-bold mb-4">Writing Task</h3>
-                <p className="text-slate-600 mb-8 p-6 bg-brand/5 rounded-2xl italic border border-brand/10">
+                <p className="text-slate-600 mb-4 p-6 bg-brand/5 rounded-2xl italic border border-brand/10">
                   {examContent.writingPrompt}
                 </p>
+                {examContent.writingPromptTranslation && (
+                  <button 
+                    onClick={() => setShowTranslation(!showTranslation)}
+                    className="mb-4 text-[10px] uppercase tracking-widest font-bold text-slate-400 hover:text-brand transition-all block mx-auto"
+                  >
+                    {showTranslation ? "Hide Translation" : "Need help? Show English version"}
+                  </button>
+                )}
+                {showTranslation && examContent.writingPromptTranslation && (
+                  <p className="mb-8 text-sm text-slate-400 italic p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 text-center">
+                    {examContent.writingPromptTranslation}
+                  </p>
+                )}
                 <textarea
                   value={writingInput}
                   onChange={(e) => setWritingInput(e.target.value)}
@@ -271,8 +304,15 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level: currentLevel, examScores, 
                 <p className="text-slate-500 mb-8">Discuss the following points with the assistant. This is a practice module.</p>
                 <div className="space-y-4 mb-8">
                   {examContent.speakingPoints.map((point: string, i: number) => (
-                    <div key={i} className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl text-left border border-slate-100 dark:border-slate-700">
-                      {point}
+                    <div key={i} className="group">
+                      <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl text-left border border-slate-100 dark:border-slate-700">
+                        {point}
+                      </div>
+                      {examContent.speakingPointsTranslation && (
+                         <p className="mt-1 text-[10px] text-slate-400 italic px-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {examContent.speakingPointsTranslation[i]}
+                         </p>
+                      )}
                     </div>
                   ))}
                 </div>

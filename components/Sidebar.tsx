@@ -7,9 +7,15 @@ interface SidebarProps {
   setActiveTab: (tab: string) => void;
   isDarkMode: boolean;
   toggleTheme: () => void;
+  isAdmin?: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isDarkMode, toggleTheme }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isDarkMode, toggleTheme, isAdmin = false }) => {
+  const menuItems = [...NAV_ITEMS];
+  if (isAdmin) {
+    menuItems.push({ label: 'Admin Panel', icon: '⚙️', id: 'admin' });
+  }
+
   return (
     <aside className="w-64 bg-white dark:bg-[#252520] border-r border-slate-100 dark:border-[#353530] flex flex-col h-screen sticky top-0 font-sans shadow-sm transition-colors duration-300">
       <div className="p-8 border-b border-slate-50 dark:border-[#353530] flex justify-between items-center">
@@ -19,7 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isDarkMode, 
         </div>
         <button 
           onClick={toggleTheme}
-          className="w-10 h-10 rounded-full bg-slate-50 dark:bg-[#2a2a25] flex items-center justify-center text-xl hover:bg-brand/10 transition-all"
+          className="w-10 h-10 rounded-full bg-slate-50 dark:bg-[#2a2a25] flex items-center justify-center text-xl hover:bg-brand/10 transition-all font-sans cursor-pointer"
         >
           {isDarkMode ? '🌞' : '🌙'}
         </button>
@@ -27,11 +33,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isDarkMode, 
       
       <nav className="flex-1 py-8">
         <ul className="space-y-2 px-4">
-          {NAV_ITEMS.map((item) => (
+          {menuItems.map((item) => (
             <li key={item.id}>
               <button
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-4 px-6 py-3 rounded-2xl transition-all text-sm font-medium ${
+                className={`w-full flex items-center gap-4 px-6 py-3 rounded-2xl transition-all text-sm font-medium cursor-pointer ${
                   activeTab === item.id 
                     ? 'bg-brand/10 text-brand shadow-sm shadow-brand/5' 
                     : 'text-slate-500 hover:text-brand hover:bg-brand/5'

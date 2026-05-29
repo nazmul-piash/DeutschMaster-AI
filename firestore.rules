@@ -35,5 +35,17 @@ service cloud.firestore {
       allow update: if isOwner(userId) && isValidProfile(request.resource.data) &&
                       (request.resource.data.diff(resource.data).affectedKeys().hasAny(['completed_lessons', 'exam_scores', 'total_progress', 'level', 'updated_at']));
     }
+
+    // Invitation Codes Schema and Permissions
+    match /invitation_codes/{code} {
+      // Allow single document read (get) for anonymous verification checks during login
+      allow get: if true;
+      // Only allow the authorized admin to see the full list, create, edit, or delete invitation codes
+      allow list, write: if isSignedIn() && (
+        request.auth.token.email == 'md.nazmulhudapiash@gmail.com' ||
+        (exists(/databases/$(database)/documents/profiles/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.isAdmin == true)
+      );
+    }
   }
 }

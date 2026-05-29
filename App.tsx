@@ -15,6 +15,7 @@ import LessonModal from './components/LessonModal';
 import ContributionView from './components/ContributionView';
 import LandingPage from './components/LandingPage';
 import AuthPage from './components/AuthPage';
+import AdminDashboard from './components/AdminDashboard';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -64,29 +65,29 @@ const App: React.FC = () => {
           completedLessons: data.completed_lessons || [],
           examScores: data.exam_scores || {},
           totalProgress: data.total_progress || 0,
-          level: data.level as ProficiencyLevel || ProficiencyLevel.A1
+          level: data.level as ProficiencyLevel || ProficiencyLevel.A1,
+          isAdmin: data.isAdmin === true
         };
         setUserProgress(progress);
         
         // Update lessons status based on fetched progress and level
         setLessons(prev => INITIAL_LESSONS.map((lesson, index, all) => {
-          // If completed
+          // 1. If explicitly completed, it stays completed
           if (progress.completedLessons.includes(lesson.id)) {
             return { ...lesson, status: 'completed' as const, progress: 100 };
           }
 
-          // Check if lesson level is higher than user level
+          // 2. If user has reached A2, all A1 lessons should be unlocked/available (not completed yet)
+          if (lesson.level === ProficiencyLevel.A1 && progress.level === ProficiencyLevel.A2) {
+            return { ...lesson, status: 'available' as const, progress: 0 };
+          }
+
+          // 3. Prevent accessing A2 if still in A1
           if (lesson.level === ProficiencyLevel.A2 && progress.level === ProficiencyLevel.A1) {
              return { ...lesson, status: 'locked' as const, progress: 0 };
           }
 
-          // ALL A1 lessons remain available even if user is A2, they behave normally based on completion
-          const isA1LessonForA2User = lesson.level === ProficiencyLevel.A1 && progress.level === ProficiencyLevel.A2;
-
-          // If the level is lower than current level but not completed (shouldn't happen with strict flow, but safe)
-          // it stays available or behaves naturally.
-
-          // First incomplete lesson of the current level should be available
+          // 4. Sequential unlocking for the current level
           const currentLevelLessons = all.filter(l => l.level === progress.level);
           const firstIncompleteInLevel = currentLevelLessons.find(l => !progress.completedLessons.includes(l.id));
           
@@ -94,13 +95,10 @@ const App: React.FC = () => {
             return { ...lesson, status: 'available' as const, progress: 0 };
           }
 
-          // Unlock next lesson logic within the same level
-          // A lesson is available if the previous one in the SAME LEVEL is completed
           const prevLesson = all[index - 1];
           if (prevLesson && 
               prevLesson.level === lesson.level && 
-              progress.completedLessons.includes(prevLesson.id) && 
-              lesson.level === progress.level) {
+              progress.completedLessons.includes(prevLesson.id)) {
             return { ...lesson, status: 'available' as const, progress: 0 };
           }
 
@@ -251,6 +249,8 @@ const App: React.FC = () => {
         return <ExamsView level={userProgress.level} examScores={userProgress.examScores} onCompleteExam={handleCompleteExam} />;
       case 'contribution':
         return <ContributionView />;
+      case 'admin':
+        return <AdminDashboard />;
       case 'achievements':
         return (
           <div className="animate-in fade-in duration-700">
@@ -275,6 +275,8 @@ const App: React.FC = () => {
     }
   };
 
+  const isUserAdmin = user && (user.email === 'md.nazmulhudapiash@gmail.com' || userProgress.isAdmin === true);
+
   return (
     <div className="flex min-h-screen bg-[var(--bg-app)] transition-colors duration-300">
       <Sidebar 
@@ -282,6 +284,7 @@ const App: React.FC = () => {
         setActiveTab={setActiveTab} 
         isDarkMode={isDarkMode}
         toggleTheme={() => setIsDarkMode(!isDarkMode)}
+        isAdmin={!!isUserAdmin}
       />
       <main className="flex-1 overflow-y-auto">
         <header className="bg-[var(--card-bg)]/80 backdrop-blur-md border-b border-[var(--border-color)] px-8 py-4 flex justify-between items-center sticky top-0 z-10 transition-colors duration-300">
