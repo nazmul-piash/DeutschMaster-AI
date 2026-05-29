@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { ProficiencyLevel } from '../types';
 import { geminiService } from '../services/geminiService';
+import { getRandomOfflineExam } from '../services/examBank';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface ExamsViewProps {
@@ -54,10 +55,32 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level: currentLevel, examScores, 
     }
   ];
 
-  const startExam = async (module: ExamModule) => {
+  const validateExamContent = (content: any, module: ExamModule): boolean => {
+    if (!content) return false;
+    if (module === 'Reading' || module === 'Listening') {
+      return !!(
+        content.text &&
+        Array.isArray(content.questions) &&
+        content.questions.length > 0 &&
+        content.questions.every((q: any) => q && q.question && Array.isArray(q.options) && q.options.length > 0 && q.correctAnswer)
+      );
+    }
+    if (module === 'Writing') {
+      return !!content.writingPrompt;
+    }
+    if (module === 'Speaking') {
+      return Array.isArray(content.speakingPoints) && content.speakingPoints.length > 0;
+    }
+    return false;
+  };
+
+  const startExam = async (module: ExamModule, forceAI = false) => {
     setSelectedModule(module);
     setExamStarted(true);
     setLoading(true);
+    setCurrentQuestionIndex(0);
+    setUserAnswers([]);
+    setWritingInput("");
     try {
       // Improved prompt for variety and structure with translations
       const prompt = `Generate a unique mock exam module for German ${examLevel} Level. Module: ${module}.
@@ -73,13 +96,39 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level: currentLevel, examScores, 
       
       Return a JSON object with fields like 'text', 'textTranslation', 'questions' (each with 'question', 'questionTranslation', 'options', 'correctAnswer'), 'writingPrompt', 'writingPromptTranslation', 'speakingPoints', 'speakingPointsTranslation'.`;
       
-      const content = await geminiService.generateExamContent(examLevel, module, prompt);
+      let content;
+      if (forceAI) {
+        content = await geminiService.generateExamContent(examLevel, module, prompt);
+      } else {
+        // Race standard API request with a 5.0 second timeout for high reliability on slow internet
+        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve({ isTimeout: true }), 5000));
+        const fetchPromise = geminiService.generateExamContent(examLevel, module, prompt);
+        const result: any = await Promise.race([fetchPromise, timeoutPromise]);
+        
+        if (result && result.isTimeout) {
+          console.warn("Gemini API call timed out on slow internet. Reverting to local study bank exam.");
+          content = getRandomOfflineExam(examLevel, module);
+          content = { ...content, wasFastLoaded: true };
+        } else {
+          content = result;
+        }
+      }
+
+      // Check if content structure fits standard requirements
+      if (!validateExamContent(content, module)) {
+        console.warn("Invalid structure parsed. Loading offline-first exam standard.");
+        content = getRandomOfflineExam(examLevel, module);
+        content = { ...content, wasFastLoaded: true };
+      }
+
       setExamContent(content);
       if (module === 'Listening' && content.text) {
         geminiService.speakText(content.text);
       }
     } catch (error) {
       console.error("Failed to load exam:", error);
+      const fallback = getRandomOfflineExam(examLevel, module);
+      setExamContent({ ...fallback, wasFastLoaded: true });
     } finally {
       setLoading(false);
     }
@@ -92,7 +141,8 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level: currentLevel, examScores, 
   };
 
   const nextQuestion = () => {
-    if (currentQuestionIndex < examContent.questions.length - 1) {
+    const totalQs = examContent?.questions?.length || 0;
+    if (currentQuestionIndex < totalQs - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
       finishExam();
@@ -102,12 +152,14 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level: currentLevel, examScores, 
   const finishExam = async () => {
     let finalScore = 0;
     if (selectedModule === 'Reading' || selectedModule === 'Listening') {
-      examContent.questions.forEach((q: any, i: number) => {
+      const qs = examContent?.questions || [];
+      qs.forEach((q: any, i: number) => {
         if (userAnswers[i] === q.correctAnswer) finalScore += 20;
       });
     } else if (selectedModule === 'Writing') {
       setLoading(true);
-      const evaluation = await geminiService.evaluateWriting(examLevel, examContent.writingPrompt, writingInput);
+      const promptStr = examContent?.writingPrompt || '';
+      const evaluation = await geminiService.evaluateWriting(examLevel, promptStr, writingInput);
       finalScore = evaluation.score;
       setLoading(false);
     } else {
@@ -184,6 +236,25 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level: currentLevel, examScores, 
             animate={{ y: 0, opacity: 1 }}
             className="space-y-8"
           >
+            {examContent?.wasFastLoaded && (
+              <div id="quick-studypack-indicator" className="p-4 rounded-2xl bg-sky-50 dark:bg-sky-950/20 text-sky-700 dark:text-sky-300 border border-sky-100 dark:border-sky-900/40 text-sm max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in slide-in-from-top duration-500 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl animate-pulse">⚡</span>
+                  <div>
+                    <h5 className="font-bold">Instant-Load Exam Active</h5>
+                    <p className="text-xs text-sky-600/80 dark:text-sky-400/80">To bypass web bottlenecks, we pulled a high-quality CEFR exam from our study bank. It's completely authentic and offline-ready.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => startExam(selectedModule!, true)}
+                  disabled={loading}
+                  className="px-4 py-2 bg-sky-600 hover:bg-sky-700 active:scale-95 text-white rounded-xl font-bold transition-all text-xs shrink-0 self-end sm:self-auto shadow"
+                >
+                  {loading ? 'Generating...' : 'Regenerate via AI'}
+                </button>
+              </div>
+            )}
+
             {(selectedModule === 'Reading' || selectedModule === 'Listening') && examContent && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="card h-fit sticky top-24">
@@ -219,24 +290,24 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level: currentLevel, examScores, 
                 <div className="space-y-6">
                   <div className="card">
                     <div className="flex justify-between items-center mb-6">
-                      <span className="text-xs font-bold text-brand uppercase tracking-widest">Question {currentQuestionIndex + 1} of {examContent.questions.length}</span>
+                      <span className="text-xs font-bold text-brand uppercase tracking-widest font-mono">Question {currentQuestionIndex + 1} of {examContent?.questions?.length || 0}</span>
                       <div className="h-1 w-32 bg-slate-100 rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-brand transition-all duration-500" 
-                          style={{ width: `${((currentQuestionIndex + 1) / examContent.questions.length) * 100}%` }}
+                          style={{ width: `${((currentQuestionIndex + 1) / (examContent?.questions?.length || 1)) * 100}%` }}
                         ></div>
                       </div>
                     </div>
                     
-                    <h4 className="text-xl font-bold mb-4">{examContent.questions[currentQuestionIndex].question}</h4>
-                    {showTranslation && examContent.questions[currentQuestionIndex].questionTranslation && (
-                      <p className="text-sm text-slate-400 italic mb-6 animate-in slide-in-from-top-1">
+                    <h4 className="text-xl font-bold mb-4">{examContent?.questions?.[currentQuestionIndex]?.question || "No Question Loaded"}</h4>
+                    {showTranslation && examContent?.questions?.[currentQuestionIndex]?.questionTranslation && (
+                      <p className="text-sm text-slate-500 italic mb-6 animate-in slide-in-from-top-1 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-dotted border-slate-200 dark:border-slate-700">
                          "{examContent.questions[currentQuestionIndex].questionTranslation}"
                       </p>
                     )}
                     
                     <div className="space-y-3">
-                      {examContent.questions[currentQuestionIndex].options.map((option: string, i: number) => (
+                      {(examContent?.questions?.[currentQuestionIndex]?.options || []).map((option: string, i: number) => (
                         <button
                           key={i}
                           onClick={() => handleAnswer(option)}
@@ -256,7 +327,7 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level: currentLevel, examScores, 
                       disabled={!userAnswers[currentQuestionIndex]}
                       className="btn-primary w-full mt-8"
                     >
-                      {currentQuestionIndex === examContent.questions.length - 1 ? 'Finish Exam' : 'Next Question'}
+                      {currentQuestionIndex === (examContent?.questions?.length || 1) - 1 ? 'Finish Exam' : 'Next Question'}
                     </button>
                   </div>
                 </div>
