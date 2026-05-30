@@ -3,21 +3,21 @@ import React from 'react';
 
 const ContributionView: React.FC = () => {
   return (
-    <div className="p-6 font-sans animate-in fade-in duration-700">
+    <div className="font-sans animate-in fade-in duration-700">
       <div className="max-w-4xl mx-auto">
         <div className="card p-0 overflow-hidden bg-white shadow-xl shadow-slate-200/50 border-white">
-          <div className="h-64 bg-brand/5 border-b border-slate-50 flex flex-col items-center justify-center text-slate-800 p-12 text-center relative overflow-hidden">
+          <div className="h-48 sm:h-64 bg-brand/5 border-b border-slate-50 flex flex-col items-center justify-center text-slate-800 p-6 sm:p-12 text-center relative overflow-hidden">
              <div className="absolute top-0 left-0 w-full h-2 bg-brand/10"></div>
              <div className="absolute -top-24 -right-24 w-64 h-64 bg-brand/5 rounded-full blur-3xl"></div>
              <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-brand/5 rounded-full blur-3xl"></div>
              
-             <h1 className="text-4xl font-bold mb-4 relative z-10 text-slate-800">Support Our Journey</h1>
-             <p className="text-slate-500 text-lg max-w-lg relative z-10 leading-relaxed">
+             <h1 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-4 relative z-10 text-slate-800">Support Our Journey</h1>
+             <p className="text-slate-500 text-sm sm:text-lg max-w-lg relative z-10 leading-relaxed px-4">
                A passion project built for the love of language, innovation, and shared growth.
              </p>
           </div>
 
-          <div className="p-8 md:p-16 grid grid-cols-1 md:grid-cols-2 gap-16">
+          <div className="p-4 sm:p-8 md:p-16 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
             <div className="space-y-10">
               <div>
                 <h3 className="text-xs font-bold text-brand mb-6 uppercase tracking-widest">A Message from the Maker</h3>

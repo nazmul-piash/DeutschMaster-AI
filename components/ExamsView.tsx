@@ -300,7 +300,7 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level: currentLevel, examScores, 
 
   if (examStarted) {
     return (
-      <div className="p-8 max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 bg-slate-50 dark:bg-slate-800 p-4 rounded-3xl border border-slate-100 dark:border-slate-700">
           <button 
             onClick={() => setShowExitConfirm(true)}
@@ -602,7 +602,7 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level: currentLevel, examScores, 
   }
 
   return (
-    <div className="p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Real-world Exam Timing Gatekeeper Alert Modal */}
       <AnimatePresence>
         {showPreExamAlert && prepModule && (

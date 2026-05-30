@@ -159,12 +159,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ onBack, onLocalLogin }) => {
 
       <button 
         onClick={onBack}
-        className="absolute top-8 left-8 text-slate-400 hover:text-brand transition-all flex items-center gap-2 font-medium z-30 group cursor-pointer"
+        className="absolute top-4 left-4 md:top-8 md:left-8 text-slate-400 hover:text-brand transition-all flex items-center gap-2 font-medium z-30 group cursor-pointer text-xs md:text-sm"
       >
         <span className="transition-transform group-hover:-translate-x-1">←</span> Zurück / Back
       </button>
 
-      <div className="w-full max-w-md relative z-10 my-12">
+      <div className="w-full max-w-md relative z-10 my-6 md:my-12">
         <div className="mb-8 flex justify-center">
           <Assistant 
             message="Willkommen! Gib einfach deine E-Mail-Adresse ein, um sofort loszulegen." 

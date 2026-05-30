@@ -31,6 +31,7 @@ const App: React.FC = () => {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [levelUpMessage, setLevelUpMessage] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Theme effect
   useEffect(() => {
@@ -397,34 +398,47 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[var(--bg-app)] transition-colors duration-300">
+    <div className="flex min-h-screen bg-[var(--bg-app)] transition-colors duration-305">
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         isDarkMode={isDarkMode}
         toggleTheme={() => setIsDarkMode(!isDarkMode)}
+        isOpenMobile={mobileMenuOpen}
+        onCloseMobile={() => setMobileMenuOpen(false)}
       />
       <main className="flex-1 overflow-y-auto">
-        <header className="bg-[var(--card-bg)]/80 backdrop-blur-md border-b border-[var(--border-color)] px-8 py-4 flex justify-between items-center sticky top-0 z-10 transition-colors duration-300">
-          <div>
-            <h2 className="text-xl text-[var(--text-main)]">Guten Tag, {user.email?.split('@')[0]}!</h2>
-            <p className="text-xs text-slate-500">Welcome back to your learning space.</p>
+        <header className="bg-[var(--card-bg)]/80 backdrop-blur-md border-b border-[var(--border-color)] px-4 md:px-8 py-3 md:py-4 flex justify-between items-center sticky top-0 z-10 transition-colors duration-300">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-all cursor-pointer"
+              aria-label="Open Navigation"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <div>
+              <h2 className="text-md sm:text-xl text-[var(--text-main)] font-extrabold tracking-tight">Guten Tag, {user.email?.split('@')[0]}!</h2>
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Welcome back to your learning space.</p>
+            </div>
           </div>
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4 sm:gap-8">
             <div className="text-right">
-              <div className="text-[10px] text-slate-400 uppercase tracking-widest font-medium">Current Level</div>
-              <div className="text-brand font-bold">{userProgress.level}</div>
+              <div className="text-[9px] sm:text-[10px] text-slate-400 uppercase tracking-widest font-bold">Current Level</div>
+              <div className="text-brand font-black text-sm sm:text-base">{userProgress.level}</div>
             </div>
             <button 
               onClick={handleLogout}
-              className="text-xs font-medium text-slate-400 hover:text-brand transition-all uppercase tracking-widest"
+              className="text-[10px] sm:text-xs font-bold text-slate-400 hover:text-brand transition-all uppercase tracking-widest"
             >
               Logout
             </button>
           </div>
         </header>
 
-        <div className="max-w-6xl mx-auto p-8">
+        <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-8">
           <AnimatePresence>
             {levelUpMessage && (
               <motion.div 

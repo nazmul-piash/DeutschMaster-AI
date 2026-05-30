@@ -87,7 +87,7 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
 
   const Notepad = ({ text }: { text: string }) => {
     return (
-      <div className="relative card p-8 md:p-12 overflow-hidden bg-white shadow-xl shadow-slate-200/50 border-brand/10">
+      <div className="relative card p-4 sm:p-8 md:p-12 overflow-hidden bg-white shadow-xl shadow-slate-200/50 border-brand/10">
         <div className="absolute top-0 left-0 w-full h-2 bg-brand/10"></div>
         
         <div className="absolute top-6 right-6 flex items-center gap-2 z-20">
@@ -164,10 +164,10 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
           <Assistant message={assistantMessage} mood={assistantMood} isTalking={isSpeakingLine !== null} />
         </div>
 
-        <div className="flex-1 overflow-y-auto p-8 md:p-12 relative">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8 md:p-12 relative">
           <button 
             onClick={onClose} 
-            className="absolute top-8 right-8 w-10 h-10 flex items-center justify-center rounded-full bg-white border border-slate-100 text-slate-400 hover:text-brand hover:border-brand transition-all z-50"
+            className="absolute top-4 right-4 md:top-8 md:right-8 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-white border border-slate-100 text-slate-400 hover:text-brand hover:border-brand transition-all z-50 text-xs md:text-sm font-bold shadow-sm"
           >
             ✕
           </button>
@@ -228,7 +228,7 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
                   </div>
                 </div>
                 {quiz.map((q, idx) => (
-                  <div key={idx} className="card p-8 border-slate-100 relative">
+                  <div key={idx} className="card p-4 sm:p-6 md:p-8 border-slate-100 relative">
                     <div className="flex justify-between items-start mb-6">
                       <p className="text-lg font-bold text-slate-800 flex gap-4">
                         <span className="text-brand/30 italic">#{idx + 1}</span>

@@ -26,10 +26,10 @@ const PracticeView: React.FC<PracticeViewProps> = ({ level }) => {
   };
 
   return (
-    <div className="p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="mb-10">
-        <h1 className="text-3xl font-bold text-[var(--text-main)] mb-2">Writing Practice</h1>
-        <p className="text-slate-500">Practice your German writing skills and get instant, friendly feedback!</p>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-main)] mb-2">Writing Practice</h1>
+        <p className="text-sm sm:text-base text-slate-500">Practice your German writing skills and get instant, friendly feedback!</p>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -44,16 +44,16 @@ const PracticeView: React.FC<PracticeViewProps> = ({ level }) => {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Schreiben Sie hier... (Write here...)"
-              className="w-full h-80 p-6 bg-transparent outline-none text-lg text-slate-700 dark:text-slate-300 resize-none placeholder:text-slate-300 font-serif"
+              className="w-full h-64 sm:h-80 p-4 sm:p-6 bg-transparent outline-none text-base sm:text-lg text-slate-700 dark:text-slate-300 resize-none placeholder:text-slate-300 font-serif"
             ></textarea>
-            <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 flex justify-between items-center border-t border-slate-100 dark:border-slate-800">
-              <span className="text-xs text-slate-400 font-medium uppercase tracking-widest">
+            <div className="bg-slate-50 dark:bg-slate-800/50 px-4 sm:px-6 py-4 flex justify-between items-center border-t border-slate-100 dark:border-slate-800">
+              <span className="text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-widest">
                 {inputText.split(/\s+/).filter(Boolean).length} words written
               </span>
               <button
                 onClick={handleSubmit}
                 disabled={loading || inputText.length < 10}
-                className="btn-primary py-3 px-8 shadow-lg shadow-brand/20"
+                className="btn-primary py-2.5 px-6 sm:py-3 sm:px-8 text-xs sm:text-sm shadow-lg shadow-brand/20 cursor-pointer"
               >
                 {loading ? 'Thinking...' : 'Get Feedback'}
               </button>
