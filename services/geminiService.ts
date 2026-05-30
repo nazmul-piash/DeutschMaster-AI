@@ -41,6 +41,11 @@ async function decodeAudioData(data: Uint8Array, ctx: AudioContext): Promise<Aud
   return buffer;
 }
 
+// Store active instances at the module level
+let activeAudioCtx: AudioContext | null = null;
+let activeAudioSource: AudioBufferSourceNode | null = null;
+let onSpeakEndCallbacks: (() => void)[] = [];
+
 export const geminiService = {
   async generateLessonContent(level: ProficiencyLevel, topic: string) {
     const response = await ai.models.generateContent({
@@ -59,7 +64,37 @@ export const geminiService = {
     return response.text;
   },
 
-  async speakText(text: string) {
+  stopSpeaking() {
+    try {
+      if (activeAudioSource) {
+        activeAudioSource.stop();
+        activeAudioSource = null;
+      }
+      if (activeAudioCtx && activeAudioCtx.state !== 'closed') {
+        activeAudioCtx.close();
+        activeAudioCtx = null;
+      }
+      // Trigger all pending end callbacks
+      const callbacks = [...onSpeakEndCallbacks];
+      onSpeakEndCallbacks = [];
+      callbacks.forEach(cb => {
+        try { cb(); } catch (e) {}
+      });
+    } catch (err) {
+      console.warn("Error stopping speech audio:", err);
+    }
+  },
+
+  async speakText(text: string, onStart?: () => void, onEnd?: () => void) {
+    // Stop any currently playing audio so they never overlap
+    this.stopSpeaking();
+
+    if (onStart) onStart();
+    const endHandler = () => {
+      if (onEnd) onEnd();
+    };
+    onSpeakEndCallbacks.push(endHandler);
+
     try {
       const response = await ai.models.generateContent({
         model: "gemini-3.1-flash-tts-preview",
@@ -76,15 +111,49 @@ export const geminiService = {
 
       const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
       if (base64Audio) {
+        // Correctly confirm we were not cancelled/stopped during key exchange
+        if (!onSpeakEndCallbacks.includes(endHandler)) {
+          return;
+        }
+
         const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+        activeAudioCtx = audioCtx;
+
         const audioBuffer = await decodeAudioData(decodeBase64(base64Audio), audioCtx);
         const source = audioCtx.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(audioCtx.destination);
+        activeAudioSource = source;
+
+        source.onended = () => {
+          const index = onSpeakEndCallbacks.indexOf(endHandler);
+          if (index !== -1) {
+            onSpeakEndCallbacks.splice(index, 1);
+            endHandler();
+          }
+          if (activeAudioCtx === audioCtx) {
+            activeAudioCtx = null;
+          }
+          if (activeAudioSource === source) {
+            activeAudioSource = null;
+          }
+        };
+
         source.start();
+      } else {
+        const index = onSpeakEndCallbacks.indexOf(endHandler);
+        if (index !== -1) {
+          onSpeakEndCallbacks.splice(index, 1);
+          endHandler();
+        }
       }
     } catch (error) {
       console.error("Speech generation failed:", error);
+      const index = onSpeakEndCallbacks.indexOf(endHandler);
+      if (index !== -1) {
+        onSpeakEndCallbacks.splice(index, 1);
+        endHandler();
+      }
     }
   },
 

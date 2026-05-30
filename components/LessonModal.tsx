@@ -46,11 +46,27 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
     loadLesson();
   }, [lesson, difficulty]);
 
+  useEffect(() => {
+    return () => {
+      geminiService.stopSpeaking();
+    };
+  }, []);
+
   const handleSpeakLine = async (line: string, index: number) => {
-    if (isSpeakingLine !== null) return;
-    setIsSpeakingLine(index);
-    await geminiService.speakText(line);
-    setIsSpeakingLine(null);
+    if (isSpeakingLine === index) {
+      geminiService.stopSpeaking();
+      setIsSpeakingLine(null);
+      return;
+    }
+    await geminiService.speakText(
+      line,
+      () => {
+        setIsSpeakingLine(index);
+      },
+      () => {
+        setIsSpeakingLine(null);
+      }
+    );
   };
 
   const handleQuizSubmit = () => {
@@ -75,7 +91,7 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
         <div className="absolute top-0 left-0 w-full h-2 bg-brand/10"></div>
         
         <div className="absolute top-6 right-6 flex items-center gap-2 z-20">
-          <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider bg-slate-50 px-2 py-1 rounded-md">Click any line to hear it 🔊</span>
+          <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider bg-slate-50 px-2 py-1 rounded-md">Use control buttons to play/stop 🔊</span>
         </div>
 
         <div className="relative z-10 font-serif text-lg leading-relaxed text-slate-700">
@@ -86,33 +102,41 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
              if (!cleanLine) return null;
 
              return (
-               <p 
+               <div 
                 key={lineIdx} 
-                className={`mb-4 p-2 rounded-xl transition-all cursor-pointer group hover:bg-brand/5 relative ${isHeading ? 'text-2xl font-bold text-slate-800 mt-8' : ''}`}
-                onClick={() => handleSpeakLine(cleanLine, lineIdx)}
+                className={`flex gap-4 items-start mb-4 p-2 rounded-xl transition-all hover:bg-slate-50/60 dark:hover:bg-slate-800/35 relative group ${isHeading ? 'text-2xl font-bold text-slate-800 mt-8' : ''}`}
                >
-                  {isSpeakingLine === lineIdx && (
-                    <motion.span 
-                      className="absolute -left-6 top-1/2 -translate-y-1/2 text-brand"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                    >
-                      🔊
-                    </motion.span>
-                  )}
-                  {cleanLine.split(' ').map((word, wordIdx) => {
-                    const isNoun = /^[A-Z]/.test(word) && word.length > 3;
-                    if (isNoun) {
-                      return (
-                        <span key={wordIdx} className="inline-block relative px-1 mx-0.5 group/word">
-                          <span className="relative z-10 text-brand font-bold">{word} </span>
-                          <div className="absolute -bottom-0.5 left-0 w-full h-1 bg-brand/10 rounded-full group-hover/word:h-full transition-all"></div>
-                        </span>
-                      );
-                    }
-                    return <span key={wordIdx}>{word} </span>;
-                  })}
-               </p>
+                 <button
+                   onClick={(e) => {
+                     e.stopPropagation();
+                     handleSpeakLine(cleanLine, lineIdx);
+                   }}
+                   type="button"
+                   className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center border font-sans text-xs transition-all shadow-sm ${
+                     isSpeakingLine === lineIdx
+                       ? 'bg-rose-50 border-rose-200 text-rose-500 animate-pulse scale-105'
+                       : 'bg-white border-slate-200 hover:border-brand text-slate-400 hover:text-brand hover:scale-105'
+                   }`}
+                   title={isSpeakingLine === lineIdx ? "Stop audio" : "Play audio line"}
+                 >
+                   {isSpeakingLine === lineIdx ? '⏹️' : '▶️'}
+                 </button>
+                 
+                 <div className="flex-1 select-text">
+                   {cleanLine.split(' ').map((word, wordIdx) => {
+                     const isNoun = /^[A-Z]/.test(word) && word.length > 3;
+                     if (isNoun) {
+                       return (
+                         <span key={wordIdx} className="inline-block relative px-1 mx-0.5 group/word">
+                           <span className="relative z-10 text-brand font-bold">{word} </span>
+                           <div className="absolute -bottom-0.5 left-0 w-full h-1 bg-brand/10 rounded-full group-hover/word:h-full transition-all"></div>
+                         </span>
+                       );
+                     }
+                     return <span key={wordIdx}>{word} </span>;
+                   })}
+                 </div>
+               </div>
              );
            })}
         </div>
