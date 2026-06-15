@@ -15,6 +15,7 @@ import LessonModal from './components/LessonModal';
 import ContributionView from './components/ContributionView';
 import LandingPage from './components/LandingPage';
 import AuthPage from './components/AuthPage';
+import FlashcardsView from './components/FlashcardsView';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -85,7 +86,11 @@ const App: React.FC = () => {
             examScores: data.exam_scores || {},
             totalProgress: data.total_progress || 0,
             level: (data.level as ProficiencyLevel) || ProficiencyLevel.A1,
-            isAdmin: false
+            isAdmin: false,
+            flashcardPoints: data.flashcard_points ?? 0,
+            flashcardStreak: data.flashcard_streak ?? 0,
+            lastFlashcardDate: data.last_flashcard_date || '',
+            flashcardSelectedLimit: data.flashcard_selected_limit ?? 5
           });
         } catch (err) {
           console.error("Failed to parse local profile:", err);
@@ -96,6 +101,10 @@ const App: React.FC = () => {
           exam_scores: {},
           total_progress: 0,
           level: ProficiencyLevel.A1,
+          flashcard_points: 0,
+          flashcard_streak: 0,
+          last_flashcard_date: '',
+          flashcard_selected_limit: 5,
           updated_at: new Date().toISOString()
         };
         localStorage.setItem(key, JSON.stringify(initialProgress));
@@ -104,7 +113,11 @@ const App: React.FC = () => {
           examScores: {},
           totalProgress: 0,
           level: ProficiencyLevel.A1,
-          isAdmin: false
+          isAdmin: false,
+          flashcardPoints: 0,
+          flashcardStreak: 0,
+          lastFlashcardDate: '',
+          flashcardSelectedLimit: 5
         });
       }
       return;
@@ -120,7 +133,11 @@ const App: React.FC = () => {
           examScores: data.exam_scores || {},
           totalProgress: data.total_progress || 0,
           level: data.level as ProficiencyLevel || ProficiencyLevel.A1,
-          isAdmin: data.isAdmin === true
+          isAdmin: data.isAdmin === true,
+          flashcardPoints: data.flashcard_points ?? 0,
+          flashcardStreak: data.flashcard_streak ?? 0,
+          lastFlashcardDate: data.last_flashcard_date || '',
+          flashcardSelectedLimit: data.flashcard_selected_limit ?? 5
         };
         setUserProgress(progress);
       } else {
@@ -129,6 +146,10 @@ const App: React.FC = () => {
           exam_scores: {},
           total_progress: 0,
           level: ProficiencyLevel.A1,
+          flashcard_points: 0,
+          flashcard_streak: 0,
+          last_flashcard_date: '',
+          flashcard_selected_limit: 5,
           updated_at: new Date().toISOString()
         };
         try {
@@ -334,6 +355,51 @@ const App: React.FC = () => {
     }
   };
 
+  const handleUpdateFlashcardStats = async (points: number, streak: number, lastDate: string, limit: number) => {
+    const updatedProgress: UserProgress = {
+      ...userProgress,
+      flashcardPoints: points,
+      flashcardStreak: streak,
+      lastFlashcardDate: lastDate,
+      flashcardSelectedLimit: limit
+    };
+
+    setUserProgress(updatedProgress);
+
+    if (user) {
+      if (user.isLocalSession) {
+        const key = `dm_profile_v2_${user.uid}`;
+        const localProfile = JSON.parse(localStorage.getItem(key) || '{}');
+        const nextLocal = {
+          ...localProfile,
+          completed_lessons: userProgress.completedLessons,
+          total_progress: userProgress.totalProgress,
+          level: userProgress.level,
+          exam_scores: userProgress.examScores,
+          flashcard_points: points,
+          flashcard_streak: streak,
+          last_flashcard_date: lastDate,
+          flashcard_selected_limit: limit,
+          updated_at: new Date().toISOString()
+        };
+        localStorage.setItem(key, JSON.stringify(nextLocal));
+      } else {
+        const profileRef = doc(db, 'profiles', user.uid);
+        try {
+          await updateDoc(profileRef, {
+            flashcard_points: points,
+            flashcard_streak: streak,
+            last_flashcard_date: lastDate,
+            flashcard_selected_limit: limit,
+            updated_at: new Date().toISOString()
+          });
+        } catch (error) {
+          handleFirestoreError(error, OperationType.UPDATE, `profiles/${user.uid}`);
+        }
+      }
+    }
+  };
+
   const handleLogout = async () => {
     if (user && user.isLocalSession) {
       localStorage.removeItem('dm_local_user');
@@ -368,6 +434,14 @@ const App: React.FC = () => {
         return <LessonsView lessons={lessons} onSelectLesson={setSelectedLesson} userLevel={userProgress.level} />;
       case 'practice':
         return <PracticeView level={userProgress.level} />;
+      case 'flashcards':
+        return (
+          <FlashcardsView 
+            level={userProgress.level} 
+            progress={userProgress} 
+            onUpdateFlashcardStats={handleUpdateFlashcardStats} 
+          />
+        );
       case 'exams':
         return <ExamsView level={userProgress.level} examScores={userProgress.examScores} onCompleteExam={handleCompleteExam} />;
       case 'contribution':
@@ -406,6 +480,7 @@ const App: React.FC = () => {
         toggleTheme={() => setIsDarkMode(!isDarkMode)}
         isOpenMobile={mobileMenuOpen}
         onCloseMobile={() => setMobileMenuOpen(false)}
+        streak={userProgress.flashcardStreak ?? 0}
       />
       <main className="flex-1 overflow-y-auto">
         <header className="bg-[var(--card-bg)]/80 backdrop-blur-md border-b border-[var(--border-color)] px-4 md:px-8 py-3 md:py-4 flex justify-between items-center sticky top-0 z-10 transition-colors duration-300">

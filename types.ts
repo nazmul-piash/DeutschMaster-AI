@@ -30,6 +30,10 @@ export interface UserProgress {
   totalProgress: number;
   level: ProficiencyLevel;
   isAdmin?: boolean;
+  flashcardPoints?: number;
+  flashcardStreak?: number;
+  lastFlashcardDate?: string;
+  flashcardSelectedLimit?: number;
 }
 
 export interface ExamSession {

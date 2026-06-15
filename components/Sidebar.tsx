@@ -9,6 +9,7 @@ interface SidebarProps {
   toggleTheme: () => void;
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
+  streak?: number;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -17,7 +18,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   isDarkMode,
   toggleTheme,
   isOpenMobile = false,
-  onCloseMobile
+  onCloseMobile,
+  streak = 0
 }) => {
   const menuItems = [...NAV_ITEMS];
 
@@ -77,16 +79,21 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="p-4 bg-slate-50 dark:bg-[#2c2c26] rounded-2xl border border-slate-100 dark:border-[#3a3a34]">
           <p className="text-[10px] text-slate-400 mb-2 uppercase tracking-widest font-bold">Your Streak</p>
           <div className="flex gap-1.5 mb-2.5">
-            {[1, 2, 3, 4, 5, 6, 7].map((day) => (
-              <div 
-                key={day} 
-                className={`flex-1 h-1.5 rounded-full ${
-                  day < 5 ? 'bg-brand shadow-sm shadow-brand/20' : 'bg-slate-200 dark:bg-slate-700'
-                }`}
-              ></div>
-            ))}
+            {[1, 2, 3, 4, 5, 6, 7].map((day) => {
+              const activeCount = streak === 0 ? 0 : streak % 7 === 0 ? 7 : streak % 7;
+              return (
+                <div 
+                  key={day} 
+                  className={`flex-1 h-1.5 rounded-full ${
+                    day <= activeCount ? 'bg-brand shadow-sm shadow-brand/20' : 'bg-slate-200 dark:bg-slate-700'
+                  }`}
+                ></div>
+              );
+            })}
           </div>
-          <p className="text-xs font-bold text-slate-700 dark:text-slate-300">🔥 4 Days Active!</p>
+          <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+            {streak > 0 ? `🔥 ${streak} ${streak === 1 ? 'Day' : 'Days'} Active!` : '💤 No active streak'}
+          </p>
         </div>
       </div>
     </div>

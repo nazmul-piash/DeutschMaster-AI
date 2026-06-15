@@ -21,6 +21,22 @@
           "type": "string",
           "description": "User's current proficiency level (A1, A2)."
         },
+        "flashcard_points": {
+          "type": "number",
+          "description": "Durable reward points earned by completing key daily flashcard sessions."
+        },
+        "flashcard_streak": {
+          "type": "number",
+          "description": "Active streak of completed daily flashcard challenges."
+        },
+        "last_flashcard_date": {
+          "type": "string",
+          "description": "Date of the last completed daily flashcard challenge (such as YYYY-MM-DD)."
+        },
+        "flashcard_selected_limit": {
+          "type": "number",
+          "description": "User's chosen daily flashcard limit (e.g. 3, 5, 10)."
+        },
         "updated_at": {
           "type": "string",
           "format": "date-time"

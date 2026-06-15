@@ -31,6 +31,7 @@ export const NAV_ITEMS = [
   { label: 'Dashboard', icon: '🏠', id: 'dashboard' },
   { label: 'Lessons', icon: '📚', id: 'lessons' },
   { label: 'Practice', icon: '💬', id: 'practice' },
+  { label: 'Flashcards', icon: '🎴', id: 'flashcards' },
   { label: 'Mock Exams', icon: '📝', id: 'exams' },
   { label: 'Achievements', icon: '🏆', id: 'achievements' },
   { label: 'Contribution', icon: '💝', id: 'contribution' },
