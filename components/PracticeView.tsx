@@ -34,9 +34,9 @@ const PracticeView: React.FC<PracticeViewProps> = ({ level }) => {
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div className="space-y-8">
-          <div className="bg-brand/5 border-l-4 border-brand p-6 rounded-r-2xl">
-            <h4 className="text-xs font-bold text-brand uppercase tracking-widest mb-3">Today's Topic:</h4>
-            <p className="text-slate-700 dark:text-slate-300 text-lg font-serif italic leading-relaxed">{prompt}</p>
+          <div className="bg-[#4a4a32]/5 dark:bg-white/5 border-l-4 border-[#4a4a32] dark:border-white p-6 rounded-r-2xl border border-black/5 dark:border-white/5 backdrop-blur-md">
+            <h4 className="text-xs font-black text-[#4a4a32] dark:text-slate-300 uppercase tracking-widest mb-3">Today's Topic:</h4>
+            <p className="text-slate-700 dark:text-slate-200 text-lg font-bold leading-relaxed">{prompt}</p>
           </div>
 
           <div className="card p-0 overflow-hidden shadow-xl shadow-slate-200/50 dark:shadow-none">
@@ -44,16 +44,16 @@ const PracticeView: React.FC<PracticeViewProps> = ({ level }) => {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Schreiben Sie hier... (Write here...)"
-              className="w-full h-64 sm:h-80 p-4 sm:p-6 bg-transparent outline-none text-base sm:text-lg text-slate-700 dark:text-slate-300 resize-none placeholder:text-slate-300 font-serif"
+              className="w-full h-64 sm:h-80 p-4 sm:p-6 bg-transparent outline-none text-base sm:text-lg text-slate-700 dark:text-slate-300 resize-none placeholder:text-slate-400 font-semibold"
             ></textarea>
-            <div className="bg-slate-50 dark:bg-slate-800/50 px-4 sm:px-6 py-4 flex justify-between items-center border-t border-slate-100 dark:border-slate-800">
-              <span className="text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-widest">
+            <div className="bg-black/5 dark:bg-white/5 px-4 sm:px-6 py-4 flex justify-between items-center border-t border-black/5 dark:border-white/5">
+              <span className="text-[10px] sm:text-xs text-slate-400 font-black uppercase tracking-widest">
                 {inputText.split(/\s+/).filter(Boolean).length} words written
               </span>
               <button
                 onClick={handleSubmit}
                 disabled={loading || inputText.length < 10}
-                className="btn-primary py-2.5 px-6 sm:py-3 sm:px-8 text-xs sm:text-sm shadow-lg shadow-brand/20 cursor-pointer"
+                className="btn-primary py-2.5 px-6 sm:py-3 sm:px-8 text-xs sm:text-sm shadow-lg cursor-pointer"
               >
                 {loading ? 'Thinking...' : 'Get Feedback'}
               </button>
@@ -85,9 +85,9 @@ const PracticeView: React.FC<PracticeViewProps> = ({ level }) => {
                 </div>
               )}
 
-              <div className="bg-brand/5 p-6 rounded-2xl border border-brand/10">
-                <h4 className="font-bold text-brand mb-3 uppercase text-xs tracking-widest">A better way to say it:</h4>
-                <p className="text-slate-700 dark:text-slate-300 text-base font-serif leading-relaxed italic">{feedback.corrections}</p>
+              <div className="bg-[#4a4a32]/5 dark:bg-white/5 p-6 rounded-2xl border border-black/5 dark:border-white/5 backdrop-blur-md">
+                <h4 className="font-bold text-[#4a4a32] dark:text-emerald-400 mb-3 uppercase text-xs tracking-widest">A better way to say it:</h4>
+                <p className="text-slate-705 dark:text-slate-200 text-base font-semibold leading-relaxed">{feedback.corrections}</p>
               </div>
 
               <div className="pt-6 border-t border-slate-100 dark:border-slate-800">

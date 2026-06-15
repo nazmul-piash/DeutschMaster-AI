@@ -42,29 +42,29 @@ const Dashboard: React.FC<DashboardProps> = ({ progress, lessons }) => {
           </div>
         </div>
 
-        <div className="card border-brand/20 bg-brand/5 flex flex-col p-8">
+        <div className="card border-[#4a4a32]/20 dark:border-white/10 bg-[#4a4a32]/5 dark:bg-white/5 flex flex-col p-8">
           <h3 className="text-lg font-bold text-[var(--text-main)] mb-2">Ready for your next step?</h3>
-          <p className="text-xs text-slate-500 mb-6 font-medium bg-white/50 dark:bg-slate-800/50 p-3 rounded-xl border border-brand/10">
+          <p className="text-[11px] text-[#4a4a32] dark:text-slate-350 mb-6 font-bold bg-white/40 dark:bg-black/30 p-3 rounded-2xl border border-[#4a4a32]/5 dark:border-white/5 backdrop-blur-md">
             💡 Pro tip: Pass any A1 mock exam with 70% or more to unlock Level A2 immediately!
           </p>
           {nextLesson ? (
             <>
-              <div className="bg-[var(--card-bg)] rounded-2xl p-6 mb-8 shadow-sm border border-brand/10">
+              <div className="bg-white/30 dark:bg-black/15 backdrop-blur-md rounded-2xl p-6 mb-8 border border-black/5 dark:border-white/5">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-2 py-0.5 bg-brand/10 text-brand text-[10px] font-bold rounded uppercase tracking-widest">
+                  <span className="px-2.5 py-0.5 bg-[#4a4a32]/10 dark:bg-white/10 text-[#4a4a32] dark:text-white text-[9px] font-black rounded-lg uppercase tracking-wider">
                     Level {nextLesson.level}
                   </span>
                 </div>
-                <h4 className="text-xl font-bold text-[var(--text-main)] mb-2">{nextLesson.title}</h4>
-                <p className="text-slate-500 text-sm leading-relaxed">{nextLesson.description}</p>
+                <h4 className="text-xl font-extrabold text-[var(--text-main)] mb-2">{nextLesson.title}</h4>
+                <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed font-semibold">{nextLesson.description}</p>
               </div>
-              <button className="mt-auto btn-primary w-full py-4 shadow-lg shadow-brand/20">
+              <button className="mt-auto btn-primary w-full py-4 shadow-md font-bold uppercase tracking-wider text-xs">
                 Start Lesson
               </button>
             </>
           ) : (
             <div className="mt-auto text-center py-8">
-              <p className="text-slate-500 italic text-sm">You've completed all available lessons! 🎉</p>
+              <p className="text-slate-500 italic text-sm font-semibold">You've completed all available lessons! 🎉</p>
             </div>
           )}
         </div>

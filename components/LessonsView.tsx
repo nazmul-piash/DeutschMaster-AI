@@ -23,13 +23,13 @@ const LessonsView: React.FC<LessonsViewProps> = ({ lessons, onSelectLesson, user
         <div className="flex gap-3">
            <button 
             onClick={() => setActiveFilter(ProficiencyLevel.A1)}
-            className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${activeFilter === ProficiencyLevel.A1 ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'bg-brand/10 text-brand hover:bg-brand/20'}`}
+            className={`px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all cursor-pointer ${activeFilter === ProficiencyLevel.A1 ? 'bg-[#4a4a32] text-white dark:bg-[#f5f5f0] dark:text-[#1a1a15] shadow-md' : 'bg-[#4a4a32]/10 text-[#4a4a32] dark:bg-white/10 dark:text-white hover:bg-[#4a4a32]/20 dark:hover:bg-white/15'}`}
            >
              A1 Beginner
            </button>
            <button 
             onClick={() => setActiveFilter(ProficiencyLevel.A2)}
-            className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${activeFilter === ProficiencyLevel.A2 ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+            className={`px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all cursor-pointer ${activeFilter === ProficiencyLevel.A2 ? 'bg-[#4a4a32] text-white dark:bg-[#f5f5f0] dark:text-[#1a1a15] shadow-md' : 'bg-[#4a4a32]/10 text-[#4a4a32] dark:bg-white/10 dark:text-white hover:bg-[#4a4a32]/20 dark:hover:bg-white/15'}`}
            >
              A2 Elementary
            </button>
@@ -43,29 +43,29 @@ const LessonsView: React.FC<LessonsViewProps> = ({ lessons, onSelectLesson, user
             onClick={() => lesson.status !== 'locked' && onSelectLesson(lesson)}
             className={`group relative card p-8 transition-all duration-300 ${
               lesson.status === 'locked' 
-                ? 'opacity-60 grayscale cursor-not-allowed bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800' 
-                : 'cursor-pointer hover:shadow-xl hover:shadow-brand/5 hover:-translate-y-1'
+                ? 'opacity-40 grayscale-[40%] cursor-not-allowed bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5' 
+                : 'cursor-pointer hover:shadow-xl hover:-translate-y-1'
             }`}
           >
             {lesson.status === 'locked' && (
-              <div className="absolute top-6 right-6 text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
-                <span className="text-lg">🔒</span> Locked
+              <div className="absolute top-6 right-6 text-[9px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-1.5">
+                <span className="text-sm">🔒</span> Locked
               </div>
             )}
             {lesson.status === 'completed' && (
-              <div className="absolute top-6 right-6 text-brand font-bold text-[10px] uppercase tracking-widest flex items-center gap-2">
-                <span className="text-lg">✅</span> Done!
+              <div className="absolute top-6 right-6 text-[#4a4a32] dark:text-emerald-400 font-extrabold text-[9px] uppercase tracking-widest flex items-center gap-1.5">
+                <span className="text-sm">👑</span> Done
               </div>
             )}
             
             <div className="mb-6">
-              <span className="inline-block px-3 py-1 bg-brand/5 text-brand text-[10px] font-bold rounded-full uppercase tracking-widest mb-4">
+              <span className="inline-block px-3 py-1.5 bg-[#4a4a32]/10 dark:bg-white/10 text-[#4a4a32] dark:text-[#f5f5f0] text-[9px] font-black rounded-lg uppercase tracking-wider mb-4 border border-[#4a4a32]/5 dark:border-white/5">
                 {lesson.level} • {lesson.topic}
               </span>
-              <h3 className="text-xl font-bold text-[var(--text-main)] group-hover:text-brand transition-colors leading-tight">{lesson.title}</h3>
+              <h3 className="text-xl font-extrabold text-[var(--text-main)] group-hover:text-[#4a4a32] dark:group-hover:text-white transition-colors leading-tight">{lesson.title}</h3>
             </div>
             
-            <p className="text-slate-500 text-sm mb-8 leading-relaxed">
+            <p className="text-slate-500 dark:text-slate-400 text-xs mb-8 leading-relaxed font-semibold">
               {lesson.description}
             </p>
 

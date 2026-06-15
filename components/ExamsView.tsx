@@ -678,16 +678,16 @@ const ExamsView: React.FC<ExamsViewProps> = ({ level: currentLevel, examScores, 
 
       <div className="max-w-4xl mx-auto">
         <div className="card p-0 overflow-hidden shadow-2xl shadow-slate-200/50 dark:shadow-none">
-          <div className="py-12 bg-brand/5 dark:bg-slate-800/25 border-b border-brand/10 flex flex-col items-center justify-center gap-4 relative overflow-hidden text-center px-4 min-h-[300px]">
-             <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--color-brand)_0%,_transparent_70%)]"></div>
+          <div className="py-12 bg-[#4a4a32]/5 dark:bg-white/5 border-b border-black/5 dark:border-white/5 flex flex-col items-center justify-center gap-4 relative overflow-hidden text-center px-4 min-h-[300px] backdrop-blur-md">
+             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_rgba(74,74,50,0.5)_0%,_transparent_70%)]"></div>
              <div className="text-4xl relative z-10">🎓</div>
-             <h1 className="text-3xl font-bold text-slate-800 dark:text-white relative z-10">Mock Exam: {examLevel}</h1>
+             <h1 className="text-3xl font-black text-slate-900 dark:text-white relative z-10 tracking-tight">Mock Exam: {examLevel}</h1>
              <div className="flex gap-3 relative z-10 flex-wrap justify-center">
                 {(['A1', 'A2'] as const).map(l => (
                   <button
                     key={l}
                     onClick={() => setExamLevel(l as ProficiencyLevel)}
-                    className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${examLevel === l ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'bg-white/80 dark:bg-slate-800/80 backdrop-blur text-slate-400 hover:text-brand border border-slate-100 dark:border-slate-800'}`}
+                    className={`px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all cursor-pointer ${examLevel === l ? 'bg-[#4a4a32] text-white dark:bg-[#f5f5f0] dark:text-[#1a1a15] shadow-md' : 'bg-white/80 dark:bg-black/35 backdrop-blur text-slate-400 dark:text-slate-400 hover:text-[#4a4a32] dark:hover:text-white border border-black/5 dark:border-white/5'}`}
                   >
                     {l} Level
                   </button>

@@ -32,13 +32,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8 }}
         >
-          <div className="inline-block px-4 py-1 bg-brand/10 text-brand text-xs font-medium rounded-full mb-8 uppercase tracking-widest">
+          <div className="inline-block px-4 py-1.5 bg-[#4a4a32]/10 dark:bg-white/10 text-[#4a4a32] dark:text-white text-xs font-extrabold rounded-full mb-8 uppercase tracking-widest border border-[#4a4a32]/10 dark:border-white/5 backdrop-blur-md">
             Your Journey to German Fluency
           </div>
-          <h1 className="text-5xl md:text-7xl mb-8 leading-tight text-[var(--text-main)]">
-            Learn German with <span className="italic font-serif text-brand">Joy</span> and <span className="italic font-serif text-brand">Confidence</span>
+          <h1 className="text-5xl md:text-7xl mb-8 leading-tight text-[var(--text-main)] font-black tracking-tight font-sans">
+            Learn German with <span className="italic text-[#4a4a32] dark:text-white underline decoration-2 decoration-emerald-500/50 underline-offset-8">Joy</span> and <span className="font-extrabold text-[#4a4a32] dark:text-white">Confidence</span>
           </h1>
-          <p className="text-lg md:text-xl text-slate-600 mb-12 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 mb-12 max-w-2xl mx-auto leading-relaxed font-semibold">
             Discover a friendly and effective way to master the German language. 
             From your first "Hallo" to full conversations, we're here to guide you every step of the way.
           </p>
@@ -51,24 +51,24 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
         >
           <button
             onClick={onStart}
-            className="btn-primary px-12 py-5 text-lg shadow-xl shadow-brand/20"
+            className="btn-primary px-12 py-5 text-lg shadow-xl shadow-brand/20 cursor-pointer font-bold uppercase tracking-widest hover:scale-105 active:scale-95 duration-200"
           >
             Start Your Adventure
           </button>
         </motion.div>
 
-        <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-12 text-slate-400">
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-2xl">📚</span>
-            <span className="text-xs font-medium uppercase tracking-widest">Interactive Lessons</span>
+        <div className="mt-20 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl mx-auto">
+          <div className="card p-5 flex flex-col items-center gap-3 bg-[var(--card-bg)] hover:-translate-y-1 transition-all">
+            <span className="text-3xl">📚</span>
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#4a4a32] dark:text-slate-300">Interactive Lessons</span>
           </div>
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-2xl">🗣️</span>
-            <span className="text-xs font-medium uppercase tracking-widest">Speaking Practice</span>
+          <div className="card p-5 flex flex-col items-center gap-3 bg-[var(--card-bg)] hover:-translate-y-1 transition-all">
+            <span className="text-3xl">🗣️</span>
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#4a4a32] dark:text-slate-300">Speaking Practice</span>
           </div>
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-2xl">🎯</span>
-            <span className="text-xs font-medium uppercase tracking-widest">Exam Preparation</span>
+          <div className="card p-5 flex flex-col items-center gap-3 bg-[var(--card-bg)] hover:-translate-y-1 transition-all">
+            <span className="text-3xl">🎯</span>
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#4a4a32] dark:text-slate-300">Exam Preparation</span>
           </div>
         </div>
       </div>

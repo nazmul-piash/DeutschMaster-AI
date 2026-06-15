@@ -172,19 +172,19 @@ const AuthPage: React.FC<AuthPageProps> = ({ onBack, onLocalLogin }) => {
           />
         </div>
 
-        <div className="card shadow-2xl relative overflow-hidden border-brand/10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
+        <div className="card shadow-2xl relative overflow-hidden border-[#4a4a32]/10 bg-white/20 dark:bg-black/20 backdrop-blur-xl">
           {/* German colors visual accent */}
-          <div className="absolute top-0 left-0 w-full h-[6px] bg-gradient-to-r from-black via-red-600 to-yellow-500"></div>
+          <div className="absolute top-0 left-0 w-full h-[6px] bg-gradient-to-r from-[#e5e5e0]/20 via-[#4a4a32]/40 to-[#e5e5e0]/20"></div>
           
-          <div className="text-center pt-2 pb-6">
-            <span className="text-[10px] uppercase font-bold tracking-widest text-brand bg-brand/5 px-3 py-1 rounded-full">
-              ⚡ Instant Magic Login
+          <div className="text-center pt-3 pb-6">
+            <span className="text-[9px] uppercase font-black tracking-[0.2em] text-[#4a4a32] dark:text-[#f5f5f0] bg-[#4a4a32]/10 dark:bg-white/10 px-4 py-1.5 rounded-full border border-[#4a4a32]/5 dark:border-white/5">
+              ⚡ Instant Magic Entry
             </span>
           </div>
 
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-white font-serif italic">Deutsch.OS Entry</h2>
-            <p className="text-xs text-slate-500 mt-1.5">No password, no PIN, no complex invitation code required.</p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-[#4a4a32] dark:text-white font-sans">Deutsch.OS</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-bold">No password, no PIN, no invitation code required.</p>
           </div>
 
           <form onSubmit={handleAuth} className="space-y-5">

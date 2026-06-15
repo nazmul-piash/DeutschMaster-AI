@@ -87,14 +87,14 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
 
   const Notepad = ({ text }: { text: string }) => {
     return (
-      <div className="relative card p-4 sm:p-8 md:p-12 overflow-hidden bg-white shadow-xl shadow-slate-200/50 border-brand/10">
-        <div className="absolute top-0 left-0 w-full h-2 bg-brand/10"></div>
+      <div className="relative card p-4 sm:p-8 md:p-12 overflow-hidden bg-white/40 dark:bg-black/25 backdrop-blur-md border-black/5 dark:border-white/5">
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-[#4a4a32]/25 dark:bg-white/25"></div>
         
         <div className="absolute top-6 right-6 flex items-center gap-2 z-20">
-          <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider bg-slate-50 px-2 py-1 rounded-md">Use control buttons to play/stop 🔊</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider bg-black/5 dark:bg-white/5 px-3 py-1.5 rounded-lg border border-black/5 dark:border-white/5">Use controls to play/stop 🔊</span>
         </div>
 
-        <div className="relative z-10 font-serif text-lg leading-relaxed text-slate-700">
+        <div className="relative z-10 font-sans text-base leading-relaxed text-slate-700 dark:text-slate-300">
            {text.split('\n').filter(l => l.trim()).map((line, lineIdx) => {
              const isHeading = line.startsWith('#');
              const cleanLine = line.replace(/[#*]/g, '').trim();
@@ -104,7 +104,7 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
              return (
                <div 
                 key={lineIdx} 
-                className={`flex gap-4 items-start mb-4 p-2 rounded-xl transition-all hover:bg-slate-50/60 dark:hover:bg-slate-800/35 relative group ${isHeading ? 'text-2xl font-bold text-slate-800 mt-8' : ''}`}
+                className={`flex gap-4 items-start mb-4 p-3 rounded-2xl transition-all hover:bg-black/5 dark:hover:bg-white/5 relative group ${isHeading ? 'text-2xl font-black text-slate-900 dark:text-white mt-10' : ''}`}
                >
                  <button
                    onClick={(e) => {
@@ -112,24 +112,24 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
                      handleSpeakLine(cleanLine, lineIdx);
                    }}
                    type="button"
-                   className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center border font-sans text-xs transition-all shadow-sm ${
+                   className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center border font-sans text-xs transition-all cursor-pointer shadow-sm ${
                      isSpeakingLine === lineIdx
-                       ? 'bg-rose-50 border-rose-200 text-rose-500 animate-pulse scale-105'
-                       : 'bg-white border-slate-200 hover:border-brand text-slate-400 hover:text-brand hover:scale-105'
+                       ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 animate-pulse scale-105'
+                       : 'bg-white/60 dark:bg-black/40 border-black/10 dark:border-white/5 hover:border-[#4a4a32] dark:hover:border-white text-slate-400 hover:text-[#4a4a32] dark:hover:text-white hover:scale-105'
                    }`}
                    title={isSpeakingLine === lineIdx ? "Stop audio" : "Play audio line"}
                  >
                    {isSpeakingLine === lineIdx ? '⏹️' : '▶️'}
                  </button>
                  
-                 <div className="flex-1 select-text">
+                 <div className="flex-1 select-text font-semibold">
                    {cleanLine.split(' ').map((word, wordIdx) => {
                      const isNoun = /^[A-Z]/.test(word) && word.length > 3;
                      if (isNoun) {
                        return (
                          <span key={wordIdx} className="inline-block relative px-1 mx-0.5 group/word">
-                           <span className="relative z-10 text-brand font-bold">{word} </span>
-                           <div className="absolute -bottom-0.5 left-0 w-full h-1 bg-brand/10 rounded-full group-hover/word:h-full transition-all"></div>
+                           <span className="relative z-10 text-[#4a4a32] dark:text-[#f5f5f0] font-black">{word} </span>
+                           <div className="absolute -bottom-0.5 left-0 w-full h-1 bg-[#4a4a32]/20 dark:bg-white/20 rounded-full group-hover/word:h-full transition-all"></div>
                          </span>
                        );
                      }
@@ -140,34 +140,34 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
              );
            })}
         </div>
-        <div className="absolute bottom-6 left-8 opacity-40 text-brand font-medium text-[10px] uppercase tracking-widest italic">Level {lesson.level} • {lesson.topic}</div>
+        <div className="absolute bottom-6 left-8 opacity-40 text-[#4a4a32] dark:text-white font-black text-[9px] uppercase tracking-widest italic">Level {lesson.level} • {lesson.topic}</div>
       </div>
     );
   };
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-paper/90 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#f4f4f0]/80 dark:bg-[#0e0e0b]/80 backdrop-blur-2xl">
         <div className="text-center">
            <div className="w-24 h-24 mb-8 mx-auto"><Assistant message="..." mood="thinking" /></div>
-           <h3 className="text-sm font-medium text-brand uppercase tracking-[0.4em] animate-pulse">Preparing your lesson...</h3>
+           <h3 className="text-[10px] font-black text-[#4a4a32] dark:text-[#f5f5f0] uppercase tracking-[0.4em] animate-pulse">Preparing your workspace...</h3>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 md:p-8 overflow-y-auto">
-      <div className="bg-paper rounded-[40px] shadow-2xl w-full max-w-7xl max-h-full overflow-hidden relative flex flex-col md:flex-row border border-white/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 md:p-8 overflow-y-auto">
+      <div className="bg-white/45 dark:bg-[#0e0e0b]/60 backdrop-blur-3xl rounded-[32px] shadow-2xl w-full max-w-7xl max-h-full overflow-hidden relative flex flex-col md:flex-row border border-white/20 dark:border-white/5">
         
-        <div className="hidden md:flex w-72 bg-brand/5 border-r border-brand/10 items-center justify-center p-8 shrink-0">
+        <div className="hidden md:flex w-72 bg-[#4a4a32]/5 dark:bg-white/5 border-r border-[#e5e5e0]/20 dark:border-white/5 items-center justify-center p-8 shrink-0">
           <Assistant message={assistantMessage} mood={assistantMood} isTalking={isSpeakingLine !== null} />
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 sm:p-8 md:p-12 relative">
           <button 
             onClick={onClose} 
-            className="absolute top-4 right-4 md:top-8 md:right-8 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-white border border-slate-100 text-slate-400 hover:text-brand hover:border-brand transition-all z-50 text-xs md:text-sm font-bold shadow-sm"
+            className="absolute top-4 right-4 md:top-8 md:right-8 w-10 h-10 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 text-slate-600 dark:text-slate-300 hover:scale-105 active:scale-95 transition-all z-50 text-sm font-black shadow-sm cursor-pointer animate-in duration-300"
           >
             ✕
           </button>
@@ -175,11 +175,11 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
           <div className="max-w-4xl mx-auto">
             <header className="mb-12">
               <div className="flex items-center gap-4 mb-6">
-                 <div className="px-3 py-1 bg-brand/10 text-brand text-[10px] font-bold rounded-full uppercase tracking-widest">Level {lesson.level}</div>
-                 <h2 className="text-2xl font-bold text-slate-800">{lesson.title}</h2>
+                 <div className="px-3 py-1 bg-[#4a4a32]/10 dark:bg-white/10 text-[#4a4a32] dark:text-white text-[10px] font-black rounded-lg uppercase tracking-wider border border-[#4a4a32]/5 dark:border-white/5">Level {lesson.level}</div>
+                 <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">{lesson.title}</h2>
               </div>
-              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex">
-                 <div className={`h-full transition-all duration-700 rounded-full ${step === 'reading' ? 'w-1/3 bg-brand' : step === 'quiz' ? 'w-2/3 bg-brand' : 'w-full bg-brand'}`}></div>
+              <div className="h-2 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden flex">
+                 <div className={`h-full transition-all duration-700 rounded-full ${step === 'reading' ? 'w-1/3 bg-[#4a4a32] dark:bg-[#f5f5f0]' : step === 'quiz' ? 'w-2/3 bg-[#4a4a32] dark:bg-[#f5f5f0]' : 'w-full bg-[#4a4a32] dark:bg-[#f5f5f0]'}`}></div>
               </div>
             </header>
 
@@ -187,15 +187,15 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
               <div className="animate-in slide-in-from-bottom-4 duration-500">
                 <Notepad text={content} />
                 
-                <div className="mt-12 card p-8 border-brand/20 bg-brand/5">
-                  <h4 className="text-sm font-bold text-brand uppercase tracking-widest mb-6">Ready for the Quiz?</h4>
+                <div className="mt-12 card p-8 border-black/5 dark:border-white/5 bg-[#4a4a32]/5 dark:bg-white/5">
+                   <h4 className="text-xs font-black text-[#4a4a32] dark:text-white uppercase tracking-widest mb-6">Ready for the Quiz?</h4>
                   <div className="flex flex-col md:flex-row items-center gap-6">
-                    <div className="flex bg-white dark:bg-slate-800 p-1.5 rounded-2xl shadow-inner border border-slate-100 flex-1 w-full">
+                    <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-2xl border border-black/5 dark:border-white/5 flex-1 w-full gap-1">
                       {(['Easy', 'Medium', 'Hard'] as const).map((d) => (
                         <button
                           key={d}
                           onClick={() => setDifficulty(d)}
-                          className={`flex-1 py-2 px-4 rounded-xl text-xs font-bold transition-all ${difficulty === d ? 'bg-brand text-white shadow-lg' : 'text-slate-400 hover:text-brand'}`}
+                          className={`flex-1 py-2 px-4 rounded-xl text-xs font-black transition-all cursor-pointer ${difficulty === d ? 'bg-[#4a4a32] text-white dark:bg-[#f5f5f0] dark:text-[#1a1a15] shadow-md' : 'text-slate-400 dark:text-slate-500 hover:text-[#4a4a32] dark:hover:text-white'}`}
                         >
                           {d}
                         </button>
@@ -206,7 +206,7 @@ const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose, onComplete }
                         setStep('quiz');
                         setAssistantMessage(`Let's go! This ${difficulty} quiz will test your knowledge of ${lesson.topic}. 📝`);
                       }}
-                      className="btn-primary flex-[2] w-full py-4 text-base shadow-lg shadow-brand/20"
+                      className="btn-primary flex-[2] w-full py-4 text-xs shadow-lg uppercase tracking-wider"
                     >
                       Start {difficulty} Quiz
                     </button>
