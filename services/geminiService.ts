@@ -2,6 +2,7 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { ProficiencyLevel, QuizQuestion } from "../types";
 import { getRandomOfflineExam } from "./examBank";
+import { FlashcardItem } from "../components/flashcardData";
 
 const getApiKey = () => {
   const key = process.env.GEMINI_API_KEY || process.env.API_KEY;
@@ -314,6 +315,80 @@ export const geminiService = {
         corrections: "Sehr gut! Du hast die Nachricht verständlich verfasst. Achte auf Groß- und Kleinschreibung sowie richtige Verbendungen.",
         feedback: "Awesome work pushing through! We evaluated your writing based on sentence length and vocabulary presence. Keep practicing to build even stronger sentence links."
       };
+    }
+  },
+
+  async generateFlashcards(
+    level: ProficiencyLevel,
+    type: 'word' | 'sentence' | 'article',
+    selectedCategories: string[],
+    excludeGermanWords: string[]
+  ): Promise<FlashcardItem[]> {
+    try {
+      const categoryPrompt = selectedCategories.length > 0 
+        ? `Focus primarily on these themes: ${selectedCategories.join(', ')}.`
+        : "";
+
+      const excludePrompt = excludeGermanWords.length > 0 
+        ? `Ensure you DO NOT generate any of the following already learned or loaded words/phrases: ${excludeGermanWords.slice(0, 100).join(', ')}.`
+        : "";
+
+      let typeSpecificPrompt = "";
+      if (type === 'word') {
+        typeSpecificPrompt = `Generate 12 fresh German nouns, verbs, or adjectives (useful for daily conversation). Nouns MUST include their definite article (der, die, or das) in the 'german' field. Specify the 'gender' as 'der', 'die', or 'das' and provide the raw noun without article in 'nounWithoutArticle'. All items must have 'type' set to 'word'.`;
+      } else if (type === 'sentence') {
+        typeSpecificPrompt = `Generate 12 helpful, conversational daily German phrases or complete sentences and their English translations. The 'german' field contains the full sentence. Do NOT specify 'gender' or 'nounWithoutArticle' fields for sentences. All items must have 'type' set to 'sentence'.`;
+      } else if (type === 'article') {
+        typeSpecificPrompt = `Generate 12 German nouns ONLY (which have clear genders: der, die, or das). The 'german' field must STILL include the article (e.g., 'der Hund'), but the 'gender' field MUST specify ('der' | 'die' | 'das') and the 'nounWithoutArticle' field MUST specify the raw noun (e.g., 'Hund'). The student will practice identifying the gender of these nouns. All items must have 'type' set to 'word'.`;
+      }
+
+      const prompt = `You are a professional German languages curriculum designer. Create exactly 12 highly engaging German-English flashcards matching level: ${level} and type: ${type}.
+      
+      Requirements:
+      ${typeSpecificPrompt}
+      ${categoryPrompt}
+      ${excludePrompt}
+
+      Return a JSON array of objects conforming to the FlashcardItem schema.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.5-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                id: { type: Type.STRING, description: "A unique random string ID (e.g. 'ai-w-1029')" },
+                german: { type: Type.STRING, description: "The German word or phrase (with article if noun, or the full sentence)" },
+                english: { type: Type.STRING, description: "Clear English translation" },
+                pronunciation: { type: Type.STRING, description: "IPA phonetic spelling (e.g., '[ˈʃlʏsl̩]')" },
+                hint: { type: Type.STRING, description: "Brief didactic hint in English helping the user remember or understand the grammar/use" },
+                exampleGerman: { type: Type.STRING, description: "An example German sentence using this item" },
+                exampleEnglish: { type: Type.STRING, description: "English translation of the example sentence" },
+                type: { type: Type.STRING, enum: ["word", "sentence"], description: "The type of item (use 'word' for nouns/verbs, 'sentence' for sentences)" },
+                category: { type: Type.STRING, enum: ["work", "personal", "family", "education", "shopping", "small_talk"], description: "Select the most appropriate matching category" },
+                gender: { type: Type.STRING, enum: ["der", "die", "das"], description: "Definite article if it's a noun. Omit for sentences." },
+                nounWithoutArticle: { type: Type.STRING, description: "For nouns: raw word without der/die/das. Omit for sentences." }
+              },
+              required: ["id", "german", "english", "pronunciation", "hint", "exampleGerman", "exampleEnglish", "type", "category"]
+            }
+          }
+        }
+      });
+
+      const parsed = JSON.parse(response.text || "[]");
+      return parsed.map((item: any) => ({
+        ...item,
+        level,
+        id: item.id || `ai-${type}-${Math.random().toString(36).substr(2, 9)}`
+      })) as FlashcardItem[];
+
+    } catch (err) {
+      console.warn("AI flashcard generation failed:", err);
+      return [];
     }
   }
 };
