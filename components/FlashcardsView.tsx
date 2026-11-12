@@ -16,6 +16,8 @@ import {
   RefreshCw, 
   Volume2, 
   Plus, 
+  Minus,
+  ChevronDown,
   Search, 
   BookOpen,
   Eye,
@@ -40,7 +42,7 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
 
   // Local component states
   const [activeTab, setActiveTab] = useState<'word' | 'sentence' | 'article'>('word');
-  const [sessionLimit, setSessionLimit] = useState<number>(10);
+  const [sessionLimit, setSessionLimit] = useState<number>(progress.flashcardSelectedLimit ?? 10);
   
   // Choose preferred topics / filters
   const [selectedCategories, setSelectedCategories] = useState<string[]>([
@@ -91,6 +93,13 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
     setActivePool(finalActive);
     setLearnedList(finalLearned);
   }, [progress, level]);
+
+  // Sync saved session card limit preference from UserProgress
+  useEffect(() => {
+    if (typeof progress.flashcardSelectedLimit === 'number' && progress.flashcardSelectedLimit > 0) {
+      setSessionLimit(progress.flashcardSelectedLimit);
+    }
+  }, [progress.flashcardSelectedLimit]);
 
   // Saves current lists to the browser cache and syncs asynchronously to the cloud
   const saveDecks = async (newActive: FlashcardItem[], newLearned: FlashcardItem[]) => {
@@ -154,8 +163,19 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
     }
   };
 
+  // Update and persist preferred session card limit
+  const handleSessionLimitChange = async (nextLimit: number) => {
+    const normalizedLimit = nextLimit >= 9999 ? 9999 : Math.max(1, Math.min(100, nextLimit));
+    setSessionLimit(normalizedLimit);
+    try {
+      await onUpdateFlashcardStats(points, streak, lastDate, normalizedLimit);
+    } catch (err) {
+      console.warn("Could not persist flashcard session limit:", err);
+    }
+  };
+
   // Setup current study deck filtered by proficiency level, tab structure, topics
-  const startStudySession = () => {
+  const startStudySession = async () => {
     const unlearnedFiltered = activePool.filter(item => {
       const matchesLevel = item.level === level;
       const matchesCategory = selectedCategories.includes(item.category);
@@ -175,6 +195,13 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
     if (unlearnedFiltered.length === 0) {
       showToast("⚠️ No active unlearned cards in this category! Click Generate or check your topics.");
       return;
+    }
+
+    // Persist the user's selected session card limit before starting practice
+    try {
+      await onUpdateFlashcardStats(points, streak, lastDate, sessionLimit);
+    } catch (err) {
+      console.warn("Could not persist flashcard session limit before starting:", err);
     }
 
     // Shuffle the cards to keep it fresh
@@ -225,7 +252,7 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
       nextStreak = streak + 1;
     }
 
-    await onUpdateFlashcardStats(newPoints, nextStreak, currentToday, 5);
+    await onUpdateFlashcardStats(newPoints, nextStreak, currentToday, sessionLimit);
     showToast(`🎓 Card Mastery unlocked! +${pointsGained} XP`);
 
     // Advance to next card or trigger success state if deck finishes
@@ -271,6 +298,20 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
     else if (activeTab === 'article') matchesTab = item.type === 'word' && !!item.gender;
     return matchesLevel && matchesTab;
   }).length;
+
+  const filteredActiveCount = activePool.filter(item => {
+    const matchesLevel = item.level === level;
+    const matchesCategory = selectedCategories.includes(item.category);
+    let matchesTab = false;
+    if (activeTab === 'word') matchesTab = item.type === 'word';
+    else if (activeTab === 'sentence') matchesTab = item.type === 'sentence';
+    else if (activeTab === 'article') matchesTab = item.type === 'word' && !!item.gender;
+    return matchesLevel && matchesCategory && matchesTab;
+  }).length;
+
+  const sessionCardCount = sessionLimit >= 9999
+    ? filteredActiveCount
+    : Math.min(filteredActiveCount, sessionLimit);
 
   const learnedCount = learnedList.filter(item => {
     const matchesLevel = item.level === level;
@@ -441,37 +482,77 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
                   )}
                 </div>
 
-                {/* Session Limit Selection */}
+                {/* Session Limit Configuration (Dropdown + Stepper) */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-550 block">
-                    Session Card Limit
-                  </label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[3, 5, 7, 10, 15, 20].map((num) => (
-                      <button
-                        key={num}
-                        type="button"
-                        onClick={() => setSessionLimit(num)}
-                        className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-                          sessionLimit === num
-                            ? 'bg-[#18181b] border-[#18181b] text-white dark:bg-white dark:border-white dark:text-zinc-900 font-extrabold shadow-sm'
-                            : 'bg-white/40 dark:bg-zinc-800/10 border-zinc-200/40 dark:border-white/5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-850 dark:hover:text-white hover:bg-zinc-100/30'
-                        }`}
-                      >
-                        {num} Cards
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => setSessionLimit(9999)}
-                      className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-                        sessionLimit === 9999
-                          ? 'bg-[#18181b] border-[#18181b] text-white dark:bg-white dark:border-white dark:text-zinc-900 font-extrabold shadow-sm'
-                          : 'bg-white/40 dark:bg-zinc-800/10 border-zinc-200/40 dark:border-white/5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-850 dark:hover:text-white hover:bg-zinc-100/30'
-                      }`}
+                  <div className="flex items-center justify-between">
+                    <label
+                      htmlFor="session-card-limit-select"
+                      className="text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 block"
                     >
-                      All ({activeCount})
-                    </button>
+                      Session Card Limit
+                    </label>
+                    <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+                      {sessionCardCount} {sessionCardCount === 1 ? 'card' : 'cards'} ready
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    {/* Preset Dropdown */}
+                    <div className="relative flex-1 min-w-[180px]">
+                      <select
+                        id="session-card-limit-select"
+                        aria-label="Session Card Limit"
+                        value={sessionLimit}
+                        onChange={(e) => handleSessionLimitChange(Number(e.target.value))}
+                        className="w-full appearance-none pl-4 pr-10 py-2.5 rounded-2xl bg-white/80 dark:bg-zinc-900/70 border border-zinc-200/70 dark:border-white/10 text-xs font-bold text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/40 transition-all cursor-pointer shadow-sm"
+                      >
+                        {[5, 10, 15, 20].map((num) => (
+                          <option key={num} value={num}>
+                            {num} Cards
+                          </option>
+                        ))}
+                        {![5, 10, 15, 20, 9999].includes(sessionLimit) && (
+                          <option value={sessionLimit}>
+                            {sessionLimit} {sessionLimit === 1 ? 'Card' : 'Cards'} (Custom)
+                          </option>
+                        )}
+                        <option value={9999}>
+                          All Available ({filteredActiveCount} Cards)
+                        </option>
+                      </select>
+                      <ChevronDown className="h-4 w-4 text-zinc-400 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" />
+                    </div>
+
+                    {/* Fine-Tune Stepper */}
+                    <div className="inline-flex items-center bg-white/80 dark:bg-zinc-900/70 border border-zinc-200/70 dark:border-white/10 rounded-2xl p-1 shadow-sm">
+                      <button
+                        type="button"
+                        aria-label="Decrease session card limit"
+                        onClick={() => {
+                          const base = sessionLimit >= 9999 ? Math.max(1, filteredActiveCount) : sessionLimit;
+                          handleSessionLimitChange(Math.max(1, base - 1));
+                        }}
+                        disabled={sessionLimit <= 1}
+                        className="w-8 h-8 rounded-xl flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                      </button>
+                      <span className="min-w-[3.25rem] text-center text-xs font-extrabold text-zinc-900 dark:text-white tabular-nums px-2">
+                        {sessionLimit >= 9999 ? 'All' : sessionLimit}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label="Increase session card limit"
+                        onClick={() => {
+                          const base = sessionLimit >= 9999 ? Math.max(1, filteredActiveCount) : sessionLimit;
+                          handleSessionLimitChange(Math.min(100, base + 1));
+                        }}
+                        disabled={sessionLimit >= 100 && sessionLimit < 9999}
+                        className="w-8 h-8 rounded-xl flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -484,7 +565,7 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
                   type="button"
                   onClick={handleGenerateAICards}
                   disabled={isGenerating}
-                  className="flex items-center justify-center gap-2 py-4 px-6 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-553 hover:to-indigo-553 text-white text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer shadow-md shadow-indigo-600/10 active:scale-95 select-none"
+                  className="flex items-center justify-center gap-2 py-4 px-6 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer shadow-md shadow-indigo-600/10 active:scale-95 select-none"
                 >
                   <Sparkles className={`h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} />
                   <span>{isGenerating ? 'Generating...' : '✨ Generate 12 AI Cards'}</span>
@@ -497,7 +578,7 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
                   className="flex items-center justify-center gap-2 py-4 px-6 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:brightness-110 text-xs font-extrabold uppercase tracking-widest transition-all cursor-pointer shadow-md shadow-zinc-500/10 active:scale-95 select-none"
                 >
                   <Play className="h-4 w-4 fill-current" />
-                  <span>Start Learning ({activeCount})</span>
+                  <span>Start Learning ({sessionCardCount})</span>
                 </button>
 
               </div>
